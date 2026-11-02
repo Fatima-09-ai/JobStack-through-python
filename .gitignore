@@ -12,3 +12,4 @@ data/raw/*
 !data/raw/.gitkeep
 .env
 data/jobstack_final.db
+.ipynb_checkpoints/
