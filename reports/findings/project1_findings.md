@@ -20,7 +20,7 @@ Sample composition: kaggle_pk 180 (60.0%), arbeitnow 115 (38.3%), remotive 5 (1.
 - **Result:** remotive 4.40, arbeitnow 1.46, kaggle_pk 0.24. Overall, 38.0% of postings have at least one extracted skill.
 - **Sample size:** n = 300 (remotive n = 5 is too small to rely on).
 - **Limitation:** Kaggle covers all industries, so some postings truly have no tech skills.
-- **Follow-up:** within Kaggle tech categories (IT, Computer Software, Web & E-commerce, Engineering, Telecom), only 24.4% of postings (n = 82) have at least one extracted skill, and examples such as "Game Developer (Unity 3D)" have none. This suggests dictionary gaps, so Pakistan skill rankings are unreliable until the dictionary improves.
+- **Follow-up:** within Kaggle tech categories (IT, Computer Software, Web & E-commerce, Engineering, Telecom), only 24.4% of postings (n = 82) have at least one extracted skill, and examples such as "Game Developer (Unity 3D)" have none. Cause: the skill dictionary in `src/transformation/extract_skills.py` has only 21 skills (for example no HTML/CSS, Android, Unity, WordPress, machine learning or software testing), so many real skills are never counted. Pakistan skill rankings are unreliable until the dictionary is expanded.
 
 ## Finding 3: Sources cover different time periods, so trends cannot be compared
 

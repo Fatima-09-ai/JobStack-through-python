@@ -17,7 +17,7 @@ These limits apply to all EDA results. Numbers refer to the 300-row development 
 
 ## 3. Skill extraction and ambiguity
 
-- Skills come from a keyword dictionary. Coverage differs a lot by source: mean skills per posting is 4.40 (remotive), 1.46 (arbeitnow) and 0.24 (kaggle_pk).
+- Skills come from a keyword dictionary with only 21 skills, so many real skills are never counted. Coverage differs a lot by source: mean skills per posting is 4.40 (remotive), 1.46 (arbeitnow) and 0.24 (kaggle_pk).
 - In Kaggle tech categories, only 24.4% of postings have at least one extracted skill. Skills missing from the dictionary are not counted, so skill rankings for Pakistan are likely too low and biased toward skills the dictionary knows.
 - Common words used as skills (for example "Communication" and "Teamwork") dominate skill pairs and can hide technical patterns.
 - Some terms have more than one meaning, so keyword matching can create false positives.
