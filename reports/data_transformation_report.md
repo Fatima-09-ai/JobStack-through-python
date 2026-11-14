@@ -1,11 +1,32 @@
 # 📊 JobStack: Data Transformation & Skill Intelligence Report (Person 2)
 
 **Author:** Person 2 (Data Transformation and Skill Intelligence)  
-**Dataset Input:** `data/validated/jobs_valid.json`  
+**Dataset Input:** `data/validated/jobs_valid.json` (300 validated job postings)
 **Dataset Output:** `data/transformed/jobs_final.csv` & `data/transformed/jobs_final.json`  
+* **Column Verification**: All required columns verified successfully; final dataset contains 26 columns.
 
 ---
+### Actual Skill Extraction Results
 
+Out of 300 job postings:
+- 114 postings (38%) contained recognized skills.
+- 186 postings (62%) contained no recognized skills.
+
+Top detected skills:
+| Skill | Count |
+|---|---:|
+| Communication | 45 |
+| Teamwork | 35 |
+| Python | 26 |
+| Excel | 16 |
+| PHP | 15 |
+| SQL | 13 |
+| AWS | 13 |
+| JavaScript | 12 |
+| Java | 10 |
+| Git | 10 |
+
+These counts are based on dictionary-based matching, not manual verification.
 ## 1. Executive Summary
 
 As **Person 2** in the JobStack project, my responsibility is to transform validated job-posting data into clean, structured, and intelligence-ready datasets for downstream database storage (SQL), exploratory data analysis (EDA), and machine learning baselines.
@@ -90,7 +111,6 @@ The entire transformation pipeline consists of four straightforward, transparent
 | `posted_at` | string / null | Date and timestamp of posting |
 | `language` | string / null | Detected language (`en`, `de`) |
 | `extracted_skills` | list of str | List of detected skills from `SKILL_DICTIONARY` (e.g., `['Python', 'SQL']`) |
-
 ---
 
 ## 6. Limitations of the Simple Skill-Matching Approach
