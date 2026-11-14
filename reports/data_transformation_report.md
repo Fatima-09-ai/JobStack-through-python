@@ -111,7 +111,6 @@ The entire transformation pipeline consists of four straightforward, transparent
 | `posted_at` | string / null | Date and timestamp of posting |
 | `language` | string / null | Detected language (`en`, `de`) |
 | `extracted_skills` | list of str | List of detected skills from `SKILL_DICTIONARY` (e.g., `['Python', 'SQL']`) |
-5. **Missing Source Information**: Some job postings contain missing location information, such as city or country. These values are preserved as null rather than being invented or automatically filled.
 ---
 
 ## 6. Limitations of the Simple Skill-Matching Approach
@@ -121,6 +120,7 @@ While dictionary-based keyword matching is transparent, explainable, and fast, i
 2. **Vocabulary Limits**: Unlisted synonyms or emerging tools not present in `SKILL_DICTIONARY` are skipped.
 3. **Absence of Negative Context**: If an ad states *"No Python experience required"*, basic string matching still detects *"Python"*.
 4. **Polysemy (Word Ambiguity)**: Words like *"Go"* or *"R"* require careful handling because they are common English words as well as programming language names.
+5. **Missing Location Information**: Some source postings have missing city or country information, which is preserved as null.
 
 ---
 
@@ -171,12 +171,25 @@ While dictionary-based keyword matching is transparent, explainable, and fast, i
 
 ## 8. Pipeline Row Count & Verification Metrics
 
-* **Input Rows**: 300
-* **Duplicates Detected & Removed**: 0 (all 300 rows in development sample were unique)
-* **Final Retained Rows**: 300
-* **Required Column Verification**: 100% pass (all 15 required columns present)
-* **Postings with Extracted Skills**: 114 (38.0%)
-* **Postings without Skills**: 186 (62.0%) (stored as clean `[]`, no fabricated data)
+* **Input**: `data/validated/jobs_valid.json`
+* **Input Records**: 300
+* **Final Records**: 300
+* **Duplicates Detected & Removed**: 0
+* **Final Columns**: 26
+* **Required Column Verification**: Passed (verified that all required columns are present; not all 26 final columns are required)
+* **Postings with Extracted Skills**: 114 (38%)
+* **Postings without Extracted Skills**: 186 (62%)
+* **Top Skill Counts**:
+  - Communication: 45
+  - Teamwork: 35
+  - Python: 26
+  - Excel: 16
+  - PHP: 15
+  - SQL: 13
+  - AWS: 13
+  - JavaScript: 12
+  - Java: 10
+  - Git: 10
 
 ---
 
