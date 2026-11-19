@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JOBSTACK — Market & Skills Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./index.css">
+<!-- React 18 and Babel for direct browser execution -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ============================================================================== */
+/* 1. DATA LAYER (jobstackData)                                                   */
+/* ============================================================================== */
+function createRng(seed = 2026) {
+  let s = seed;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const rand = createRng(2026);
+
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pick(arr) {
+  return arr[Math.floor(rand() * arr.length)];
+}
+
+function expand(list) {
+  const out = [];
+  list.forEach(([item, count]) => {
+    for (let i = 0; i < count; i++) out.push(item);
+  });
+  return out;
+}
+
+function roundToFive(n) {
+  return Math.round(n / 5) * 5;
+}
+
+const SKILL_CATEGORIES = {
+  PROGRAMMING_LANGUAGES: ['Python', 'SQL', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'PHP'],
+  FRAMEWORKS_AND_TOOLS: [
+    'React', 'Node.js', 'Pandas', 'FastAPI', 'Django', 'Flask', 'Docker', 'AWS', 'Azure',
+    'Kubernetes', 'Linux', 'Git', 'PostgreSQL', 'MongoDB', 'Tableau', 'Power BI', 'PyTorch',
+    'TensorFlow', 'Spark', 'Excel', 'Selenium', 'Figma', 'REST APIs', 'Networking', 'SEO'
+  ],
+  SOFT_SKILLS: ['Communication', 'Teamwork', 'Problem Solving', 'Agile', 'Jira', 'Leadership']
+};
+
+const SOFT_SKILLS_SET = new Set(SKILL_CATEGORIES.SOFT_SKILLS);
+const LANGUAGES_SET = new Set(SKILL_CATEGORIES.PROGRAMMING_LANGUAGES);
+
+function getSkillCategory(skillName) {
+  if (LANGUAGES_SET.has(skillName)) return 'Programming Language';
+  if (SOFT_SKILLS_SET.has(skillName)) return 'Soft Skill / Methodology';
+  return 'Framework / Tool';
+}
+
+const BASE_DATA = {
+  jobs: 300,
+  companies: 84,
+  skills: 36,
+  locations: [
+    ['Lahore', 62], ['Karachi', 55], ['Islamabad', 48], ['Remote', 30],
+    ['Rawalpindi', 24], ['Faisalabad', 20], ['Peshawar', 15], ['Multan', 14],
+    ['Sialkot', 10], ['Hyderabad', 8], ['Gujranwala', 8], ['Quetta', 6]
+  ],
+  companyTop: [
+    ['Nexa Labs', 21], ['Orbit Systems', 18], ['Brightwave', 16], ['Kinetic Works', 14],
+    ['Lumen Data', 13], ['Harbor Tech', 11], ['Pixel Forge', 10], ['Northstar', 9]
+  ],
+  skillsTop: [
+    ['Python', 142], ['SQL', 128], ['JavaScript', 119], ['React', 96],
+    ['Excel', 88], ['AWS', 74], ['Node.js', 69], ['Docker', 58],
+    ['Communication', 55], ['Git', 51]
+  ],
+  weekly: [18, 21, 19, 24, 22, 27, 26, 29, 28, 31, 27, 28],
+  types: [['Full-time', 198], ['Contract', 52], ['Internship', 30], ['Part-time', 20]]
+};
+
+const ROLES = [
+  { n: 'Software Engineer', s: ['Python', 'Java', 'JavaScript', 'C++', 'Git', 'SQL', 'Docker', 'REST APIs', 'Agile'], a: 'You will design, build and maintain core product features used by thousands of customers.', r: ['Write clean, tested and maintainable code', 'Review pull requests and improve code quality', 'Work with product and design to ship features on schedule'] },
+  { n: 'Frontend Developer', s: ['JavaScript', 'React', 'TypeScript', 'CSS', 'Git', 'Figma'], a: 'You will turn designs into fast, accessible and responsive web interfaces.', r: ['Build reusable UI components', 'Optimize page speed and accessibility', 'Integrate front-end screens with backend APIs'] },
+  { n: 'Backend Developer', s: ['Node.js', 'Python', 'Django', 'Flask', 'SQL', 'PostgreSQL', 'MongoDB', 'Docker', 'REST APIs', 'Git'], a: 'You will own the services and databases that power our platform.', r: ['Design and document REST APIs', 'Model data and write efficient queries', 'Monitor services and fix production issues'] },
+  { n: 'Full-Stack Developer', s: ['React', 'Node.js', 'JavaScript', 'TypeScript', 'MongoDB', 'PostgreSQL', 'Git', 'Docker'], a: 'You will work across the whole stack, from database to user interface.', r: ['Ship features end to end', 'Build APIs and the screens that use them', 'Deploy and maintain applications'] },
+  { n: 'Data Analyst', s: ['SQL', 'Excel', 'Python', 'Tableau', 'Power BI', 'Pandas', 'Communication'], a: 'You will turn raw business data into clear insights that guide decisions.', r: ['Build dashboards and weekly reports', 'Clean and validate datasets', 'Present findings to non-technical teams'] },
+  { n: 'Data Scientist', s: ['Python', 'Pandas', 'SQL', 'TensorFlow', 'PyTorch', 'Spark', 'Communication'], a: 'You will build models and experiments that solve real business problems.', r: ['Explore data and engineer features', 'Train, evaluate and tune models', 'Explain results to stakeholders'] },
+  { n: 'Machine Learning Engineer', s: ['Python', 'PyTorch', 'TensorFlow', 'Docker', 'AWS', 'Git', 'Pandas'], a: 'You will take machine learning models from notebooks into production.', r: ['Build training and inference pipelines', 'Deploy and monitor models', 'Improve model speed and accuracy'] },
+  { n: 'DevOps Engineer', s: ['Docker', 'Kubernetes', 'AWS', 'Linux', 'Git', 'Azure', 'Python'], a: 'You will keep our delivery pipeline and infrastructure fast and reliable.', r: ['Automate builds, tests and deployments', 'Manage containers and cloud resources', 'Set up monitoring and alerts'] },
+  { n: 'QA Engineer', s: ['Selenium', 'JavaScript', 'Jira', 'Agile', 'SQL', 'Communication'], a: 'You will make sure every release is stable before it reaches users.', r: ['Write and run manual and automated tests', 'Report and track bugs', 'Help define quality standards for the team'] },
+  { n: 'Product Manager', s: ['Agile', 'Jira', 'Communication', 'Leadership', 'Excel', 'SQL'], a: 'You will decide what we build next and guide it from idea to launch.', r: ['Gather user needs and define requirements', 'Prioritize the product roadmap', 'Coordinate design, engineering and marketing'] },
+  { n: 'UI/UX Designer', s: ['Figma', 'CSS', 'Communication', 'JavaScript'], a: 'You will shape how our products look, feel and work for users.', r: ['Create wireframes, prototypes and design systems', 'Run user research and usability tests', 'Hand off polished designs to developers'] },
+  { n: 'Business Analyst', s: ['Excel', 'SQL', 'Power BI', 'Communication', 'Jira', 'Agile'], a: 'You will connect business goals with data and technical teams.', r: ['Document requirements and processes', 'Analyze performance metrics', 'Recommend improvements to stakeholders'] },
+  { n: 'Database Administrator', s: ['SQL', 'PostgreSQL', 'MongoDB', 'Linux', 'AWS'], a: 'You will keep our databases fast, secure and always available.', r: ['Tune queries and indexes', 'Manage backups and recovery', 'Control access and monitor health'] },
+  { n: 'Cloud Engineer', s: ['AWS', 'Azure', 'Kubernetes', 'Linux', 'Docker', 'Networking'], a: 'You will design and run the cloud systems behind our products.', r: ['Provision and secure cloud infrastructure', 'Control cost and capacity', 'Support teams moving workloads to the cloud'] },
+  { n: 'Mobile App Developer', s: ['Flutter', 'JavaScript', 'React', 'Java', 'REST APIs', 'Git'], a: 'You will build mobile apps that people use every day.', r: ['Develop features for Android and iOS', 'Connect apps to backend APIs', 'Fix crashes and improve performance'] },
+  { n: 'Technical Support Engineer', s: ['Communication', 'Linux', 'Networking', 'SQL', 'Jira'], a: 'You will help customers solve technical problems quickly and clearly.', r: ['Troubleshoot customer issues', 'Document fixes in the knowledge base', 'Escalate bugs to engineering with clear detail'] },
+  { n: 'Project Manager', s: ['Agile', 'Jira', 'Leadership', 'Communication', 'Excel'], a: 'You will keep projects on time, on budget and moving in one direction.', r: ['Plan scope, schedules and budgets', 'Run stand-ups and sprint reviews', 'Report progress and risks to leadership'] },
+  { n: 'Digital Marketing Specialist', s: ['SEO', 'Excel', 'Communication', 'Tableau'], a: 'You will grow our audience and measure what works.', r: ['Plan and run online campaigns', 'Improve search rankings', 'Track results and report on ROI'] },
+  { n: 'Data Engineer', s: ['Python', 'SQL', 'Spark', 'AWS', 'Docker', 'PostgreSQL'], a: 'You will build the pipelines that deliver trusted data to every team.', r: ['Design and maintain ETL pipelines', 'Keep data accurate and on time', 'Optimize storage and processing cost'] },
+  { n: 'Cybersecurity Analyst', s: ['Networking', 'Linux', 'Python', 'Communication', 'AWS'], a: 'You will protect our systems and data from threats.', r: ['Monitor systems for suspicious activity', 'Investigate and respond to incidents', 'Run vulnerability scans and fix gaps'] }
+];
+
+const LEVELS = [
+  { n: 'Intern', pre: '', exp: 'No experience required', lo: 25, hi: 45 },
+  { n: 'Junior', pre: 'Junior ', exp: '0–2 years', lo: 80, hi: 130 },
+  { n: 'Mid-level', pre: '', exp: '2–4 years', lo: 150, hi: 230 },
+  { n: 'Senior', pre: 'Senior ', exp: '5+ years', lo: 260, hi: 400 },
+  { n: 'Lead', pre: 'Lead ', exp: '7+ years', lo: 420, hi: 600 }
+];
+
+const BENEFITS = [
+  'Health insurance', 'Flexible working hours', 'Annual performance bonus',
+  'Paid learning budget', 'Provident fund', 'Hybrid work option', 'Free lunch',
+  'Career growth plan', 'Paid annual leave'
+];
+
+function generateJobs() {
+  const localRand = createRng(2026);
+  function localShuffle(a) {
+    const copy = [...a];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(localRand() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function localPick(a) { return a[Math.floor(localRand() * a.length)]; }
+
+  const prefixes = ['Apex', 'Zenith', 'Cobalt', 'Vertex', 'Quantum', 'Solis', 'Ember', 'Atlas', 'Nimbus', 'Helix', 'Cipher', 'Vector', 'Prism', 'Falcon', 'Granite', 'Aurora', 'Pioneer', 'Summit', 'Echo', 'Indigo'];
+  const suffixes = ['Systems', 'Labs', 'Digital', 'Soft', 'Works', 'Analytics', 'Cloud', 'Technologies'];
+  const others = [];
+  prefixes.forEach(p => { suffixes.forEach(s => { others.push(`${p} ${s}`); }); });
+  localShuffle(others);
+
+  const compCounts = [...BASE_DATA.companyTop];
+  others.slice(0, 76).forEach((n, i) => { compCounts.push([n, i < 36 ? 3 : 2]); });
+
+  const locs = localShuffle(expand(BASE_DATA.locations));
+  const types = localShuffle(expand(BASE_DATA.types));
+  const comps = localShuffle(expand(compCounts));
+
+  const jobs = [];
+  for (let k = 0; k < BASE_DATA.jobs; k++) {
+    const ri = Math.floor(localRand() * ROLES.length);
+    const role = ROLES[ri];
+    const type = types[k];
+    const li = type === 'Internship' ? 0 : localPick([1, 1, 2, 2, 2, 3, 3, 4]);
+    const lv = LEVELS[li];
+    let lo = roundToFive(lv.lo + localRand() * (lv.hi - lv.lo));
+    let hi = roundToFive(lo * (1.25 + localRand() * 0.2));
+    if (type === 'Part-time') { lo = roundToFive(lo * 0.55); hi = roundToFive(hi * 0.55); }
+    if (hi <= lo) hi = lo + 5;
+    const days = Math.floor(localRand() * 84);
+
+    const roleSkills = localShuffle(role.s);
+    const pickedSkills = roleSkills.slice(0, Math.min(role.s.length, 3 + Math.floor(localRand() * 3)));
+
+    jobs.push({
+      r: ri,
+      roleName: role.n,
+      level: lv.n,
+      exp: lv.exp,
+      title: li === 0 ? `${role.n} Intern` : `${lv.pre}${role.n}`,
+      company: comps[k],
+      loc: locs[k],
+      type,
+      salaryMin: lo,
+      salaryMax: hi,
+      salaryAvg: Math.round((lo + hi) / 2),
+      salary: `PKR ${lo}k – ${hi}k / month`,
+      days,
+      posted: days === 0 ? 'Today' : days === 1 ? '1 day ago' : days < 14 ? `${days} days ago` : `${Math.floor(days / 7)} weeks ago`,
+      skills: pickedSkills,
+      benefits: localShuffle(BENEFITS).slice(0, 4)
+    });
+  }
+
+  jobs.sort((a, b) => a.days - b.days);
+  jobs.forEach((j, i) => { j.id = i + 1; });
+  return jobs;
+}
+
+const JOBS = generateJobs();
+
+function getSkillsSummary(jobs = JOBS) {
+  const totalJobs = jobs.length;
+  const countMap = new Map();
+  const salaryMap = new Map();
+
+  jobs.forEach(job => {
+    job.skills.forEach(skill => {
+      countMap.set(skill, (countMap.get(skill) || 0) + 1);
+      if (!salaryMap.has(skill)) salaryMap.set(skill, []);
+      salaryMap.get(skill).push(job.salaryAvg);
+    });
+  });
+
+  const list = Array.from(countMap.entries()).map(([name, count]) => {
+    const salaries = salaryMap.get(name) || [];
+    const avgSalary = salaries.length ? Math.round(salaries.reduce((a, b) => a + b, 0) / salaries.length) : 0;
+    return {
+      name,
+      count,
+      pct: parseFloat(((count / totalJobs) * 100).toFixed(1)),
+      category: getSkillCategory(name),
+      avgSalary
+    };
+  });
+  list.sort((a, b) => b.count - a.count);
+  return list;
+}
+
+function getLanguageMetrics(jobs = JOBS) {
+  const summary = getSkillsSummary(jobs);
+  const langList = summary.filter(s => LANGUAGES_SET.has(s.name));
+  return langList.map(lang => {
+    const matching = jobs.filter(j => j.skills.includes(lang.name));
+    const levels = { Intern: 0, Junior: 0, 'Mid-level': 0, Senior: 0, Lead: 0 };
+    matching.forEach(j => { levels[j.level] = (levels[j.level] || 0) + 1; });
+    return { ...lang, totalPostings: matching.length, levels };
+  });
+}
+
+function getFrameworkToolMetrics(jobs = JOBS) {
+  const summary = getSkillsSummary(jobs);
+  const toolList = summary.filter(s => !LANGUAGES_SET.has(s.name) && !SOFT_SKILLS_SET.has(s.name));
+  const subCategoryMap = {
+    Frontend: ['React', 'CSS', 'Figma'],
+    'Backend & APIs': ['Node.js', 'FastAPI', 'Django', 'Flask', 'REST APIs', 'PostgreSQL', 'MongoDB'],
+    'Cloud & DevOps': ['Docker', 'AWS', 'Azure', 'Kubernetes', 'Linux'],
+    'Data & AI': ['Pandas', 'PyTorch', 'TensorFlow', 'Spark', 'Excel', 'Tableau', 'Power BI'],
+    'Dev Tools & Testing': ['Git', 'Selenium', 'Networking', 'SEO']
+  };
+  const getSub = (skill) => {
+    for (const [sub, skills] of Object.entries(subCategoryMap)) {
+      if (skills.includes(skill)) return sub;
+    }
+    return 'General Tool';
+  };
+  return toolList.map(item => ({ ...item, subCategory: getSub(item.name) }));
+}
+
+function getSkillPairs(jobs = JOBS, { excludeSoftSkills = false, minCount = 4 } = {}) {
+  const pairCounts = new Map();
+  const totalJobs = jobs.length;
+  let inScopeJobs = 0;
+
+  jobs.forEach(job => {
+    let skills = job.skills;
+    if (excludeSoftSkills) skills = skills.filter(s => !SOFT_SKILLS_SET.has(s));
+    const unique = Array.from(new Set(skills)).sort();
+    if (unique.length >= 2) {
+      inScopeJobs++;
+      for (let i = 0; i < unique.length; i++) {
+        for (let j = i + 1; j < unique.length; j++) {
+          const key = `${unique[i]}__${unique[j]}`;
+          pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+        }
+      }
+    }
+  });
+
+  const pairs = [];
+  pairCounts.forEach((count, key) => {
+    if (count >= minCount) {
+      const [skillA, skillB] = key.split('__');
+      pairs.push({
+        skillA,
+        skillB,
+        count,
+        pct: parseFloat(((count / totalJobs) * 100).toFixed(1)),
+        pctInScope: inScopeJobs ? parseFloat(((count / inScopeJobs) * 100).toFixed(1)) : 0
+      });
+    }
+  });
+  pairs.sort((a, b) => b.count - a.count);
+  return { pairs, inScopeJobs, totalJobs };
+}
+
+function getCooccurrenceMatrix(jobs = JOBS, targetSkills) {
+  const matrix = {};
+  targetSkills.forEach(s1 => {
+    matrix[s1] = {};
+    targetSkills.forEach(s2 => { matrix[s1][s2] = 0; });
+  });
+
+  jobs.forEach(job => {
+    const jobSkills = new Set(job.skills);
+    targetSkills.forEach(s1 => {
+      if (jobSkills.has(s1)) {
+        targetSkills.forEach(s2 => {
+          if (jobSkills.has(s2)) matrix[s1][s2]++;
+        });
+      }
+    });
+  });
+  return matrix;
+}
+
+function getSkillDeepDive(skillName, jobs = JOBS) {
+  if (!skillName) return null;
+  const nameLower = skillName.trim().toLowerCase();
+  const summary = getSkillsSummary(jobs);
+  const found = summary.find(s => s.name.toLowerCase() === nameLower);
+  const canonical = found ? found.name : skillName;
+  const matching = jobs.filter(j => j.skills.some(s => s.toLowerCase() === canonical.toLowerCase()));
+
+  if (!matching.length) return null;
+
+  const rank = summary.findIndex(s => s.name === canonical) + 1;
+
+  const coMap = new Map();
+  matching.forEach(j => {
+    j.skills.forEach(s => {
+      if (s !== canonical) coMap.set(s, (coMap.get(s) || 0) + 1);
+    });
+  });
+
+  const coOccurring = Array.from(coMap.entries())
+    .map(([name, count]) => ({
+      name,
+      count,
+      pctOfJobs: parseFloat(((count / matching.length) * 100).toFixed(1)),
+      category: getSkillCategory(name)
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const roleMap = new Map();
+  matching.forEach(j => { roleMap.set(j.roleName, (roleMap.get(j.roleName) || 0) + 1); });
+  const topRoles = Array.from(roleMap.entries()).map(([role, count]) => ({ role, count })).sort((a, b) => b.count - a.count);
+
+  const compMap = new Map();
+  matching.forEach(j => { compMap.set(j.company, (compMap.get(j.company) || 0) + 1); });
+  const topCompanies = Array.from(compMap.entries()).map(([company, count]) => ({ company, count })).sort((a, b) => b.count - a.count);
+
+  const locMap = new Map();
+  matching.forEach(j => { locMap.set(j.loc, (locMap.get(j.loc) || 0) + 1); });
+  const topLocations = Array.from(locMap.entries()).map(([loc, count]) => ({ loc, count })).sort((a, b) => b.count - a.count);
+
+  const levelCounts = { Intern: 0, Junior: 0, 'Mid-level': 0, Senior: 0, Lead: 0 };
+  matching.forEach(j => { levelCounts[j.level] = (levelCounts[j.level] || 0) + 1; });
+
+  const avgSalary = found ? found.avgSalary : 0;
+  const salaries = matching.map(j => j.salaryAvg);
+  const minSalary = Math.min(...salaries);
+  const maxSalary = Math.max(...salaries);
+
+  return {
+    name: canonical,
+    category: getSkillCategory(canonical),
+    rank: rank || 'N/A',
+    postingsCount: matching.length,
+    marketSharePct: parseFloat(((matching.length / jobs.length) * 100).toFixed(1)),
+    avgSalary,
+    salaryRange: `PKR ${minSalary}k – ${maxSalary}k / mo`,
+    levelCounts,
+    coOccurring,
+    topRoles,
+    topCompanies,
+    topLocations,
+    matchingJobs: matching
+  };
+}
+
+/* ============================================================================== */
+/* 2. ORBIT BACKGROUND                                                            */
+/* ============================================================================== */
+function OrbitBackground({ isLanding = false }) {
+  return (
+    <div className={`orbit ${!isLanding ? 'in-dashboard' : ''}`} aria-hidden="true">
+      <div className="arm a"><span className="dot"></span></div>
+      <div className="arm b"><span className="dot"></span></div>
+    </div>
+  );
+}
+
+/* ============================================================================== */
+/* 3. LANDING PAGE                                                                */
+/* ============================================================================== */
+function LandingPage({ onEnter }) {
+  const [leaving, setLeaving] = useState(false);
+  const letters = 'JOBSTACK'.split('');
+
+  const triggerLeave = () => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => { onEnter(); }, 950);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(triggerLeave, 5500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <main id="landing" className={`view ${leaving ? 'leave' : ''}`} onClick={triggerLeave} role="banner">
+      <h1 className="title" aria-label="JOBSTACK">
+        {letters.map((ch, i) => (
+          <span key={i} aria-hidden="true" style={{ animationDelay: `${0.2 + i * 0.12}s` }}>
+            {ch}
+          </span>
+        ))}
+      </h1>
+      <div className="tag"><b>Job market intelligence</b></div>
+      <div className="skip">Click anywhere to enter</div>
+    </main>
+  );
+}
+
+/* ============================================================================== */
+/* 4. DASHBOARD (OVERVIEW)                                                        */
+/* ============================================================================== */
+function Dashboard() {
+  const [activeSlice, setActiveSlice] = useState(null);
+  const D = BASE_DATA;
+
+  const totalLoc = D.locations.reduce((acc, r) => acc + r[1], 0);
+  const c = 90, r = 86;
+  let angle = -Math.PI / 2;
+
+  const slices = D.locations.map((it, i) => {
+    const nextAngle = angle + (it[1] / totalLoc) * Math.PI * 2;
+    const x1 = c + r * Math.cos(angle);
+    const y1 = c + r * Math.sin(angle);
+    const x2 = c + r * Math.cos(nextAngle);
+    const y2 = c + r * Math.sin(nextAngle);
+    const midAngle = (angle + nextAngle) / 2;
+    const dx = (Math.cos(midAngle) * 9).toFixed(1);
+    const dy = (Math.sin(midAngle) * 9).toFixed(1);
+    const largeArcFlag = nextAngle - angle > Math.PI ? 1 : 0;
+    const pathD = `M${c} ${c}L${x1} ${y1}A${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2}Z`;
+    const sliceColor = i === 0 ? '#ff2d2d' : `hsl(0,0%,${7 + (i - 1) * 6}%)`;
+    angle = nextAngle;
+
+    return {
+      index: i,
+      label: it[0],
+      count: it[1],
+      pct: Math.round((it[1] / D.jobs) * 100),
+      color: sliceColor,
+      d: pathD,
+      dx, dy
+    };
+  });
+
+  const linePoints = D.weekly.map((n, i) => [14 + i * (292 / (D.weekly.length - 1)), 120 - (n / 35) * 100]);
+  const polylineStr = linePoints.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+
+  return (
+    <div className="dashboard-view">
+      <h2 className="page-title">Overview</h2>
+      <div className="kpis">
+        <div className="card kpi"><b>{D.jobs}</b><span>Total jobs in the dataset</span></div>
+        <div className="card kpi"><b>{D.companies}</b><span>Companies</span></div>
+        <div className="card kpi"><b>{D.locations.length}</b><span>Locations</span></div>
+        <div className="card kpi"><b>{D.skills}</b><span>Extracted skills</span></div>
+      </div>
+
+      <div className="grid">
+        <div className="card">
+          <h3>Jobs by location</h3>
+          <p className="sub">Bigger slices are where most companies are hiring.</p>
+          <div className="pie">
+            <div className="pw">
+              <svg viewBox="0 0 180 180" role="img" aria-label="Jobs by location">
+                {slices.map(sl => {
+                  const isHovered = activeSlice === sl.index;
+                  return (
+                    <path
+                      key={sl.index}
+                      className={`slice ${isHovered ? 'on' : ''}`}
+                      d={sl.d}
+                      fill={sl.color}
+                      stroke="#efede6"
+                      strokeWidth="1.5"
+                      style={{
+                        transform: isHovered ? `translate(${sl.dx}px, ${sl.dy}px)` : 'none',
+                        opacity: activeSlice !== null && activeSlice !== sl.index ? 0.35 : 1,
+                        transition: 'transform .2s ease, opacity .2s ease',
+                        cursor: 'crosshair'
+                      }}
+                      onMouseEnter={() => setActiveSlice(sl.index)}
+                      onMouseLeave={() => setActiveSlice(null)}
+                    >
+                      <title>{`${sl.label}: ${sl.count} jobs`}</title>
+                    </path>
+                  );
+                })}
+              </svg>
+              <div className={`pie-tip ${activeSlice !== null ? 'show' : ''}`} aria-live="polite">
+                {activeSlice !== null && (
+                  <span>{slices[activeSlice].label}: {slices[activeSlice].count} jobs ({slices[activeSlice].pct}%)</span>
+                )}
+              </div>
+            </div>
+            <ul className="legend">
+              {slices.map(sl => (
+                <li
+                  key={sl.index}
+                  onMouseEnter={() => setActiveSlice(sl.index)}
+                  onMouseLeave={() => setActiveSlice(null)}
+                  style={{
+                    background: activeSlice === sl.index ? '#0b0b0c' : undefined,
+                    color: activeSlice === sl.index ? '#efede6' : undefined
+                  }}
+                >
+                  <span className="sw" style={{ background: sl.color }}></span>
+                  {sl.label}
+                  <em>{sl.count}</em>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Top skills</h3>
+          <p className="sub">Jobs mentioning each skill, out of {D.skills} extracted skills.</p>
+          {D.skillsTop.map(([name, count]) => (
+            <div key={name} className="row">
+              <span>{name}</span>
+              <div className="track"><div className="fill" style={{ width: `${(count / 150) * 100}%` }}></div></div>
+              <i>{count}</i>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <h3>Top hiring companies</h3>
+          <p className="sub">Open jobs per company, from {D.companies} companies.</p>
+          {D.companyTop.map(([comp, count]) => (
+            <div key={comp} className="row">
+              <span>{comp}</span>
+              <div className="track"><div className="fill" style={{ width: `${(count / 24) * 100}%` }}></div></div>
+              <i>{count}</i>
+            </div>
+          ))}
+        </div>
+
+        <div className="card line">
+          <h3>Jobs posted per week</h3>
+          <p className="sub">300 jobs over 12 weeks.</p>
+          <svg viewBox="0 0 320 150" role="img" aria-label="Jobs posted per week">
+            <line x1="14" y1="120" x2="306" y2="120" stroke="currentColor" opacity=".3" />
+            <polyline points={polylineStr} fill="none" stroke="#0b0b0c" strokeWidth="2.5" strokeLinejoin="miter" />
+            {linePoints.map(([x, y], idx) => (
+              <g key={idx} className="pt">
+                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r="10" fill="transparent" />
+                <circle className="dt" cx={x.toFixed(1)} cy={y.toFixed(1)} r="3.5" fill="#ff2d2d" />
+                <text className="tip" x={x.toFixed(1)} y={(y - 11).toFixed(1)} textAnchor="middle" fontSize="11" fontWeight="700" fontFamily="JetBrains Mono, monospace" fill="currentColor">
+                  {D.weekly[idx]}
+                </text>
+              </g>
+            ))}
+            <text x="14" y="140" fontSize="10" fontFamily="JetBrains Mono, monospace" fill="currentColor">Week 1</text>
+            <text x="306" y="140" fontSize="10" textAnchor="end" fontFamily="JetBrains Mono, monospace" fill="currentColor">Week 12</text>
+          </svg>
+        </div>
+
+        <div className="card">
+          <h3>Jobs by type</h3>
+          <p className="sub">Share of the 300 jobs.</p>
+          {D.types.map(([type, count]) => (
+            <div key={type} className="row">
+              <span>{type}</span>
+              <div className="track"><div className="fill" style={{ width: `${(count / 200) * 100}%` }}></div></div>
+              <i>{count}</i>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================== */
+/* 5. JOB EXPLORER                                                                */
+/* ============================================================================== */
+const PER_PAGE = 12;
+
+function JobExplorer({ onSelectJob }) {
+  const [query, setQuery] = useState('');
+  const [location, setLocation] = useState('');
+  const [jobType, setJobType] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filteredJobs = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return JOBS.filter(j => {
+      const matchLoc = !location || j.loc === location;
+      const matchType = !jobType || j.type === jobType;
+      const matchText = !q || j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.skills.some(s => s.toLowerCase().includes(q));
+      return matchLoc && matchType && matchText;
+    });
+  }, [query, location, jobType]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PER_PAGE));
+  const activePage = Math.min(currentPage, totalPages);
+
+  const paginatedJobs = useMemo(() => {
+    const start = (activePage - 1) * PER_PAGE;
+    return filteredJobs.slice(start, start + PER_PAGE);
+  }, [filteredJobs, activePage]);
+
+  const handleReset = () => {
+    setQuery('');
+    setLocation('');
+    setJobType('');
+    setCurrentPage(1);
+  };
+
+  const pageNumbers = useMemo(() => {
+    const set = new Set();
+    [1, totalPages, activePage - 1, activePage, activePage + 1].forEach(p => {
+      if (p >= 1 && p <= totalPages) set.add(p);
+    });
+    const sorted = Array.from(set).sort((a, b) => a - b);
+    const out = [];
+    let prev = 0;
+    sorted.forEach(p => {
+      if (p - prev > 1) out.push('…');
+      out.push(p);
+      prev = p;
+    });
+    return out;
+  }, [activePage, totalPages]);
+
+  return (
+    <div className="explorer-view">
+      <h2 className="page-title">Job Explorer</h2>
+      <div className="card toolbar">
+        <div className="field">
+          <label htmlFor="q">Search title, company or skill</label>
+          <input
+            id="q"
+            type="search"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setCurrentPage(1); }}
+            placeholder="e.g. Data Analyst, Nexa Labs, Python"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="loc">Location</label>
+          <select id="loc" value={location} onChange={(e) => { setLocation(e.target.value); setCurrentPage(1); }}>
+            <option value="">All locations</option>
+            {BASE_DATA.locations.map(([city, count]) => (
+              <option key={city} value={city}>{city} ({count})</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="wide chips" id="chips" role="group" aria-label="Employment type">
+          <button className="chip" aria-pressed={jobType === ''} onClick={() => { setJobType(''); setCurrentPage(1); }}>
+            All<em>{BASE_DATA.jobs}</em>
+          </button>
+          {BASE_DATA.types.map(([t, count]) => (
+            <button key={t} className="chip" aria-pressed={jobType === t} onClick={() => { setJobType(t); setCurrentPage(1); }}>
+              {t}<em>{count}</em>
+            </button>
+          ))}
+          <button className="chip reset" onClick={handleReset}>Reset filters</button>
+        </div>
+      </div>
+
+      <p className="count" aria-live="polite">
+        Showing {filteredJobs.length ? (activePage - 1) * PER_PAGE + 1 : 0}–{(activePage - 1) * PER_PAGE + paginatedJobs.length} of {filteredJobs.length} jobs
+      </p>
+
+      <div className="jobs">
+        {paginatedJobs.length > 0 ? (
+          paginatedJobs.map(j => (
+            <button key={j.id} className="card job" onClick={() => onSelectJob(j)}>
+              <h3>{j.title}</h3>
+              <p className="co">{j.company}</p>
+              <div>
+                <span className="pill">{j.loc}</span>
+                <span className="pill hot">{j.type}</span>
+              </div>
+              <p className="skl">{j.skills.slice(0, 4).join(' · ')}</p>
+              <div className="foot">
+                <span>{j.salary}</span>
+                <span>{j.posted}</span>
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="card empty">
+            <h3>No jobs found</h3>
+            <p className="sub">Try a different keyword, title, company or filter combination.</p>
+          </div>
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <nav className="pager" aria-label="Pagination">
+          <button disabled={activePage === 1} onClick={() => setCurrentPage(activePage - 1)} aria-label="Previous page">←</button>
+          {pageNumbers.map((p, idx) => (
+            p === '…' ? (
+              <span key={idx} className="gap">…</span>
+            ) : (
+              <button key={idx} aria-current={p === activePage ? 'page' : undefined} onClick={() => setCurrentPage(p)}>
+                {p}
+              </button>
+            )
+          ))}
+          <button disabled={activePage === totalPages} onClick={() => setCurrentPage(activePage + 1)} aria-label="Next page">→</button>
+        </nav>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================================== */
+/* 6. SKILLS INTELLIGENCE                                                         */
+/* ============================================================================== */
+function SkillsIntelligence({ onSelectJob }) {
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('Python');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [excludeSoftSkills, setExcludeSoftSkills] = useState(true);
+  const [selectedPairFilter, setSelectedPairFilter] = useState(null);
+  const [matrixHoverCell, setMatrixHoverCell] = useState(null);
+
+  const allSkillsSummary = useMemo(() => getSkillsSummary(JOBS), []);
+  const languageMetrics = useMemo(() => getLanguageMetrics(JOBS), []);
+  const frameworkToolMetrics = useMemo(() => getFrameworkToolMetrics(JOBS), []);
+  const { pairs: skillPairs, inScopeJobs } = useMemo(
+    () => getSkillPairs(JOBS, { excludeSoftSkills, minCount: 4 }),
+    [excludeSoftSkills]
+  );
+
+  const matrixSkills = useMemo(
+    () => ['Python', 'SQL', 'JavaScript', 'React', 'Docker', 'AWS', 'Git', 'Pandas', 'Node.js', 'Excel'],
+    []
+  );
+
+  const coocMatrix = useMemo(() => getCooccurrenceMatrix(JOBS, matrixSkills), [matrixSkills]);
+  const deepDiveData = useMemo(() => getSkillDeepDive(searchQuery, JOBS), [searchQuery]);
+
+  const filteredDemandedSkills = useMemo(() => {
+    return allSkillsSummary.filter(s => {
+      if (categoryFilter === 'All') return true;
+      if (categoryFilter === 'Languages') return LANGUAGES_SET.has(s.name);
+      if (categoryFilter === 'Frameworks & Tools') return !LANGUAGES_SET.has(s.name) && !SOFT_SKILLS_SET.has(s.name);
+      if (categoryFilter === 'Soft Skills') return SOFT_SKILLS_SET.has(s.name);
+      return true;
+    });
+  }, [allSkillsSummary, categoryFilter]);
+
+  const pairMatchingJobs = useMemo(() => {
+    if (!selectedPairFilter) return [];
+    const [sA, sB] = selectedPairFilter;
+    return JOBS.filter(j => j.skills.includes(sA) && j.skills.includes(sB));
+  }, [selectedPairFilter]);
+
+  const topLanguages = languageMetrics.slice(0, 8);
+  const maxLangCount = Math.max(...topLanguages.map(l => l.count), 1);
+  const maxSkillCount = allSkillsSummary[0]?.count || 150;
+
+  return (
+    <div className="skills-intelligence-view">
+      <div className="skills-header">
+        <h2 className="page-title">Skills Intelligence</h2>
+        <p className="skills-subtitle">
+          Market demand, language benchmarks, framework prevalence & co-occurrence graphs across 300 verified postings.
+        </p>
+      </div>
+
+      {/* Top Navigation Tabs */}
+      <div className="skills-nav-tabs" role="tablist">
+        <button className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>Overview & Deep Dive</button>
+        <button className={`tab-btn ${activeTab === 'demanded' ? 'active' : ''}`} onClick={() => setActiveTab('demanded')}>Most Demanded Skills</button>
+        <button className={`tab-btn ${activeTab === 'languages' ? 'active' : ''}`} onClick={() => setActiveTab('languages')}>Programming Languages</button>
+        <button className={`tab-btn ${activeTab === 'tools' ? 'active' : ''}`} onClick={() => setActiveTab('tools')}>Frameworks & Tools</button>
+        <button className={`tab-btn ${activeTab === 'cooccurrence' ? 'active' : ''}`} onClick={() => setActiveTab('cooccurrence')}>Skill Combinations & Co-occurrence</button>
+      </div>
+
+      {/* KPI Highlights Strip */}
+      <div className="kpis skills-kpi-strip">
+        <div className="card kpi"><b>{allSkillsSummary.length}</b><span>Total Skills Extracted</span></div>
+        <div className="card kpi"><b>47.3%</b><span>#1 Top Language (Python)</span></div>
+        <div className="card kpi"><b>32.0%</b><span>#1 Top Framework (React)</span></div>
+        <div className="card kpi"><b>78</b><span>Top Pair (Python + SQL)</span></div>
+        <div className="card kpi"><b>4.8</b><span>Avg Skills per Job</span></div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* SECTION: SEARCH & DEEP DIVE                                               */}
+      {/* ========================================================================= */}
+      {(activeTab === 'all' || activeTab === 'search') && (
+        <section className="card skills-section deep-dive-section">
+          <div className="section-header">
+            <h3>Search for a Particular Skill</h3>
+            <span className="section-tag">Interactive Explorer</span>
+          </div>
+          <p className="sub">
+            Search any skill to inspect market rank, salary ranges, co-occurring technologies, and matching job postings.
+          </p>
+
+          <div className="skill-search-bar">
+            <div className="field" style={{ flex: 1 }}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search skill (e.g. Python, React, AWS, SQL, Docker, Pandas, Git)..."
+                className="skill-search-input"
+              />
+            </div>
+            {searchQuery && (
+              <button className="chip reset" onClick={() => setSearchQuery('')} style={{ height: '42px', marginTop: 'auto' }}>
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="quick-skill-pills">
+            <span className="quick-label">Popular Skills:</span>
+            {['Python', 'SQL', 'JavaScript', 'React', 'AWS', 'Docker', 'Pandas', 'Git', 'Excel', 'Node.js', 'TypeScript'].map(skl => (
+              <button
+                key={skl}
+                className={`pill-btn ${searchQuery.toLowerCase() === skl.toLowerCase() ? 'active' : ''}`}
+                onClick={() => setSearchQuery(skl)}
+              >
+                {skl}
+              </button>
+            ))}
+          </div>
+
+          {deepDiveData ? (
+            <div className="deep-dive-card">
+              <div className="spotlight-header">
+                <div>
+                  <span className="category-badge">{deepDiveData.category}</span>
+                  <h4 className="spotlight-title">{deepDiveData.name}</h4>
+                </div>
+                <div className="spotlight-rank-box">
+                  <span className="rank-num">#{deepDiveData.rank}</span>
+                  <span className="rank-label">Rank in Demand</span>
+                </div>
+              </div>
+
+              <div className="facts" style={{ margin: '14px 0' }}>
+                <div className="fact"><span>Job Postings</span><b>{deepDiveData.postingsCount} / 300 ({deepDiveData.marketSharePct}%)</b></div>
+                <div className="fact"><span>Avg Monthly Salary</span><b>PKR {deepDiveData.avgSalary}k / mo</b></div>
+                <div className="fact"><span>Salary Range</span><b>{deepDiveData.salaryRange}</b></div>
+                <div className="fact"><span>Top Hiring City</span><b>{deepDiveData.topLocations[0]?.loc || 'Lahore'} ({deepDiveData.topLocations[0]?.count} jobs)</b></div>
+              </div>
+
+              <div className="level-distribution-box">
+                <span className="field-title">Experience Level Breakdown:</span>
+                <div className="level-bar-container">
+                  {Object.entries(deepDiveData.levelCounts).map(([lvl, count]) => {
+                    if (count === 0) return null;
+                    const pct = Math.round((count / deepDiveData.postingsCount) * 100);
+                    return (
+                      <div
+                        key={lvl}
+                        className={`level-seg seg-${lvl.toLowerCase().replace(/[^a-z]/g, '')}`}
+                        style={{ width: `${pct}%` }}
+                        title={`${lvl}: ${count} jobs (${pct}%)`}
+                      >
+                        <span>{lvl} {pct}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="deep-dive-grid">
+                <div className="deep-subcard">
+                  <h5>Frequently Paired With {deepDiveData.name}</h5>
+                  <p className="sub">Click any paired skill to view its deep dive profile.</p>
+                  <div className="paired-skills-list">
+                    {deepDiveData.coOccurring.slice(0, 8).map(co => (
+                      <div
+                        key={co.name}
+                        className="paired-row"
+                        onClick={() => setSearchQuery(co.name)}
+                        title={`Click to explore ${co.name}`}
+                      >
+                        <span className="paired-name">{co.name}</span>
+                        <div className="track"><div className="fill" style={{ width: `${co.pctOfJobs}%` }}></div></div>
+                        <i className="paired-stat">{co.count} ({co.pctOfJobs}%)</i>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="deep-subcard">
+                  <h5>Top Roles & Companies</h5>
+                  <p className="sub">Where {deepDiveData.name} is most frequently required.</p>
+                  <div className="mini-tables">
+                    <div>
+                      <span className="mini-heading">Top Job Titles:</span>
+                      <ul className="mini-list">
+                        {deepDiveData.topRoles.slice(0, 4).map(r => (
+                          <li key={r.role}><span>{r.role}</span><b>{r.count}</b></li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <span className="mini-heading">Top Hiring Companies:</span>
+                      <ul className="mini-list">
+                        {deepDiveData.topCompanies.slice(0, 4).map(c => (
+                          <li key={c.company}><span>{c.company}</span><b>{c.count}</b></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="matching-jobs-container">
+                <div className="section-header" style={{ marginTop: '20px' }}>
+                  <h5>Jobs Requiring {deepDiveData.name} ({deepDiveData.matchingJobs.length} Found)</h5>
+                  <span className="sub">Click any card to open full job details</span>
+                </div>
+                <div className="jobs mini-jobs-grid">
+                  {deepDiveData.matchingJobs.slice(0, 6).map(j => (
+                    <button key={j.id} className="card job" onClick={() => onSelectJob(j)}>
+                      <h3>{j.title}</h3>
+                      <p className="co">{j.company} · {j.loc}</p>
+                      <div>
+                        <span className="pill hot">{j.type}</span>
+                        <span className="pill">{j.salary}</span>
+                      </div>
+                      <p className="skl">{j.skills.join(' · ')}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card empty" style={{ marginTop: '16px' }}>
+              <h3>No skill found matching "{searchQuery}"</h3>
+              <p className="sub">Try selecting a popular skill above or check for spelling.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION: MOST DEMANDED SKILLS                                             */}
+      {/* ========================================================================= */}
+      {(activeTab === 'all' || activeTab === 'demanded') && (
+        <section className="card skills-section">
+          <div className="section-header">
+            <h3>Most Demanded Skills</h3>
+            <span className="section-tag">{filteredDemandedSkills.length} Skills</span>
+          </div>
+          <p className="sub">
+            Ranked frequency of extracted skills across 300 job postings with market share and salary correlation.
+          </p>
+
+          <div className="chips" style={{ marginBottom: '16px' }}>
+            {['All', 'Languages', 'Frameworks & Tools', 'Soft Skills'].map(cat => (
+              <button
+                key={cat}
+                className="chip"
+                aria-pressed={categoryFilter === cat}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="skills-table">
+            <div className="skills-table-head">
+              <span style={{ width: '40px' }}>#</span>
+              <span style={{ flex: 1.2 }}>Skill</span>
+              <span style={{ width: '130px' }}>Category</span>
+              <span style={{ flex: 2 }}>Postings & Market Penetration</span>
+              <span style={{ width: '90px', textAlign: 'right' }}>Avg Salary</span>
+            </div>
+            <div className="skills-table-body">
+              {filteredDemandedSkills.map((item, idx) => (
+                <div
+                  key={item.name}
+                  className="skills-table-row"
+                  onClick={() => { setSearchQuery(item.name); setActiveTab('all'); }}
+                  title={`Click to view deep dive for ${item.name}`}
+                >
+                  <span className="rank-col">#{idx + 1}</span>
+                  <span className="name-col"><b>{item.name}</b></span>
+                  <span className="cat-col"><span className="badge-micro">{item.category}</span></span>
+                  <div className="bar-col">
+                    <div className="track"><div className="fill" style={{ width: `${(item.count / maxSkillCount) * 100}%` }}></div></div>
+                    <span className="count-col">{item.count} jobs ({item.pct}%)</span>
+                  </div>
+                  <span className="sal-col">PKR {item.avgSalary}k</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION: PROGRAMMING LANGUAGE FREQUENCY                                   */}
+      {/* ========================================================================= */}
+      {(activeTab === 'all' || activeTab === 'languages') && (
+        <section className="card skills-section">
+          <div className="section-header">
+            <h3>Programming Language Frequency</h3>
+            <span className="section-tag">Core Languages</span>
+          </div>
+          <p className="sub">
+            Relative frequency, market penetration and seniority distribution among core programming languages.
+          </p>
+
+          <div className="grid" style={{ marginBottom: '18px' }}>
+            <div className="card subcard">
+              <h4>Language Market Share</h4>
+              <p className="sub">Percentage of total postings mentioning each language.</p>
+              {topLanguages.map(lang => (
+                <div key={lang.name} className="row" style={{ margin: '6px -6px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{lang.name}</span>
+                  <div className="track">
+                    <div className="fill" style={{ width: `${(lang.count / maxLangCount) * 100}%`, backgroundColor: '#ff2d2d' }}></div>
+                  </div>
+                  <i>{lang.count}</i>
+                </div>
+              ))}
+            </div>
+
+            <div className="card subcard">
+              <h4>Seniority & Compensation Benchmarks</h4>
+              <p className="sub">Experience profile and average salary per language.</p>
+              <div className="lang-benchmarks-list">
+                {topLanguages.map(lang => (
+                  <div key={lang.name} className="lang-benchmark-item">
+                    <div className="lang-item-top">
+                      <b>{lang.name}</b>
+                      <span>Avg PKR {lang.avgSalary}k / mo</span>
+                    </div>
+                    <div className="lang-mini-levels">
+                      {Object.entries(lang.levels).map(([lvl, cnt]) => (
+                        <span key={lvl} className="level-pill-micro">{lvl.slice(0, 3)}: {cnt}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION: FRAMEWORK AND TOOL FREQUENCY                                     */}
+      {/* ========================================================================= */}
+      {(activeTab === 'all' || activeTab === 'tools') && (
+        <section className="card skills-section">
+          <div className="section-header">
+            <h3>Framework and Tool Frequency</h3>
+            <span className="section-tag">Libraries, Cloud & Tools</span>
+          </div>
+          <p className="sub">Demand breakdown across Web, Cloud, Data & DevOps tooling environments.</p>
+
+          <div className="tools-domain-grid">
+            {['Frontend', 'Backend & APIs', 'Cloud & DevOps', 'Data & AI', 'Dev Tools & Testing'].map(domain => {
+              const toolsInDomain = frameworkToolMetrics.filter(t => t.subCategory === domain);
+              return (
+                <div key={domain} className="card domain-card">
+                  <h4>{domain}</h4>
+                  <span className="sub">{toolsInDomain.length} tools tracked</span>
+                  <div className="domain-tools-list">
+                    {toolsInDomain.map(tool => (
+                      <div
+                        key={tool.name}
+                        className="domain-row"
+                        onClick={() => { setSearchQuery(tool.name); setActiveTab('all'); }}
+                      >
+                        <span className="tool-name">{tool.name}</span>
+                        <div className="track"><div className="fill" style={{ width: `${(tool.count / 100) * 100}%` }}></div></div>
+                        <span className="tool-count">{tool.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION: SKILL COMBINATIONS & CO-OCCURRENCE                               */}
+      {/* ========================================================================= */}
+      {(activeTab === 'all' || activeTab === 'cooccurrence') && (
+        <section className="card skills-section">
+          <div className="section-header">
+            <h3>Skill Combinations and Co-occurrence</h3>
+            <span className="section-tag">Synergy & Clustering</span>
+          </div>
+          <p className="sub">Pairs and tech stacks that frequently appear together in the same job posting.</p>
+
+          <div className="cooc-controls-bar">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={excludeSoftSkills}
+                onChange={(e) => setExcludeSoftSkills(e.target.checked)}
+                className="brutalist-checkbox"
+              />
+              <span>Exclude Soft Skills (Communication, Teamwork, Problem Solving) for pure technical synergy</span>
+            </label>
+            <span className="scope-tag">Scope: {inScopeJobs} postings with 2+ skills</span>
+          </div>
+
+          <div className="grid">
+            <div className="card subcard">
+              <h4>Top Co-occurring Pairs</h4>
+              <p className="sub">Most frequent skill pairs in job postings.</p>
+              <div className="pairs-table">
+                {skillPairs.slice(0, 10).map((pair, idx) => (
+                  <div
+                    key={`${pair.skillA}-${pair.skillB}`}
+                    className="pair-row"
+                    onClick={() => { setSelectedPairFilter([pair.skillA, pair.skillB]); }}
+                    title={`Click to view jobs requiring ${pair.skillA} + ${pair.skillB}`}
+                  >
+                    <span className="pair-rank">#{idx + 1}</span>
+                    <span className="pair-names"><b>{pair.skillA}</b> + <b>{pair.skillB}</b></span>
+                    <div className="track" style={{ flex: 1, margin: '0 10px' }}>
+                      <div className="fill" style={{ width: `${(pair.count / 80) * 100}%` }}></div>
+                    </div>
+                    <span className="pair-count">{pair.count} jobs ({pair.pct}%)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card subcard">
+              <h4>High-Synergy Tech Stacks</h4>
+              <p className="sub">Standard multi-skill combinations in the market.</p>
+              <div className="tech-stack-cards">
+                <div className="stack-card">
+                  <b>Python Data Stack</b>
+                  <p className="sub">Data Engineering & Analytics</p>
+                  <div className="stack-pills">
+                    <span className="pill">Python</span><span className="pill">SQL</span>
+                    <span className="pill">Pandas</span><span className="pill">Docker</span>
+                  </div>
+                </div>
+                <div className="stack-card">
+                  <b>Modern Full-Stack Web</b>
+                  <p className="sub">Product Engineering</p>
+                  <div className="stack-pills">
+                    <span className="pill">React</span><span className="pill">JavaScript</span>
+                    <span className="pill">Node.js</span><span className="pill">Git</span>
+                  </div>
+                </div>
+                <div className="stack-card">
+                  <b>Cloud & DevOps Stack</b>
+                  <p className="sub">Infrastructure & Deployment</p>
+                  <div className="stack-pills">
+                    <span className="pill">Docker</span><span className="pill">AWS</span>
+                    <span className="pill">Kubernetes</span><span className="pill">Linux</span>
+                  </div>
+                </div>
+                <div className="stack-card">
+                  <b>Machine Learning Systems</b>
+                  <p className="sub">Model Training & Inference</p>
+                  <div className="stack-pills">
+                    <span className="pill">Python</span><span className="pill">PyTorch</span>
+                    <span className="pill">TensorFlow</span><span className="pill">AWS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card matrix-container" style={{ marginTop: '18px' }}>
+            <div className="section-header">
+              <h4>Skill Co-occurrence Matrix (Heatmap)</h4>
+              <span className="sub">Hover over any cell to inspect mutual postings count</span>
+            </div>
+
+            <div className="matrix-table-wrapper">
+              <table className="cooc-matrix-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    {matrixSkills.map(s => (
+                      <th key={s} className={matrixHoverCell && (matrixHoverCell.s1 === s || matrixHoverCell.s2 === s) ? 'highlight-header' : ''}>
+                        {s}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrixSkills.map(s1 => (
+                    <tr key={s1}>
+                      <th className={matrixHoverCell && (matrixHoverCell.s1 === s1 || matrixHoverCell.s2 === s1) ? 'highlight-header' : ''}>
+                        {s1}
+                      </th>
+                      {matrixSkills.map(s2 => {
+                        const count = coocMatrix[s1]?.[s2] || 0;
+                        const isSelf = s1 === s2;
+                        const intensity = isSelf ? 0 : Math.min(1, count / 75);
+                        const isHovered = matrixHoverCell && ((matrixHoverCell.s1 === s1 && matrixHoverCell.s2 === s2) || (matrixHoverCell.s1 === s2 && matrixHoverCell.s2 === s1));
+
+                        const cellBg = isSelf
+                          ? 'rgba(11,11,12,.08)'
+                          : intensity > 0.6
+                          ? '#ff2d2d'
+                          : intensity > 0.3
+                          ? 'rgba(255, 45, 45, 0.55)'
+                          : intensity > 0.1
+                          ? 'rgba(255, 45, 45, 0.25)'
+                          : intensity > 0
+                          ? 'rgba(255, 45, 45, 0.1)'
+                          : 'transparent';
+
+                        const cellColor = intensity > 0.6 && !isSelf ? '#efede6' : '#0b0b0c';
+
+                        return (
+                          <td
+                            key={s2}
+                            style={{
+                              backgroundColor: cellBg,
+                              color: cellColor,
+                              outline: isHovered ? '2px solid #0b0b0c' : undefined,
+                              cursor: isSelf ? 'default' : 'crosshair'
+                            }}
+                            onMouseEnter={() => !isSelf && setMatrixHoverCell({ s1, s2, count })}
+                            onMouseLeave={() => setMatrixHoverCell(null)}
+                            onClick={() => { if (!isSelf && count > 0) setSelectedPairFilter([s1, s2]); }}
+                          >
+                            {isSelf ? '—' : count}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {matrixHoverCell && (
+              <div className="matrix-tooltip-display">
+                <b>{matrixHoverCell.s1} + {matrixHoverCell.s2}:</b> {matrixHoverCell.count} job postings ({((matrixHoverCell.count / BASE_DATA.jobs) * 100).toFixed(1)}% of all jobs). Click to inspect matching jobs.
+              </div>
+            )}
+
+            {selectedPairFilter && (
+              <div className="pair-filtered-jobs" style={{ marginTop: '20px' }}>
+                <div className="section-header">
+                  <h5>Jobs Requiring BOTH {selectedPairFilter[0]} AND {selectedPairFilter[1]} ({pairMatchingJobs.length} postings)</h5>
+                  <button className="chip reset" onClick={() => setSelectedPairFilter(null)}>Close Pair View</button>
+                </div>
+                <div className="jobs mini-jobs-grid">
+                  {pairMatchingJobs.map(j => (
+                    <button key={j.id} className="card job" onClick={() => onSelectJob(j)}>
+                      <h3>{j.title}</h3>
+                      <p className="co">{j.company} · {j.loc}</p>
+                      <div>
+                        <span className="pill hot">{j.type}</span>
+                        <span className="pill">{j.salary}</span>
+                      </div>
+                      <p className="skl">{j.skills.join(' · ')}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================================== */
+/* 6b. LOCATION ANALYSIS                                                          */
+/* ============================================================================== */
+function LocationAnalysis() {
+  const locationData = useMemo(() => {
+    const cityMap = new Map();
+
+    JOBS.forEach(job => {
+      if (!cityMap.has(job.loc)) {
+        cityMap.set(job.loc, { jobs: [], skills: new Map(), companies: new Map(), types: new Map() });
+      }
+      const entry = cityMap.get(job.loc);
+      entry.jobs.push(job);
+      job.skills.forEach(s => { entry.skills.set(s, (entry.skills.get(s) || 0) + 1); });
+      entry.companies.set(job.company, (entry.companies.get(job.company) || 0) + 1);
+      entry.types.set(job.type, (entry.types.get(job.type) || 0) + 1);
+    });
+
+    return Array.from(cityMap.entries()).map(([city, data]) => ({
+      city,
+      count: data.jobs.length,
+      pct: parseFloat(((data.jobs.length / JOBS.length) * 100).toFixed(1)),
+      topSkills: Array.from(data.skills.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 6),
+      topCompanies: Array.from(data.companies.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5),
+      types: Array.from(data.types.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+      avgSalary: Math.round(data.jobs.reduce((sum, j) => sum + j.salaryAvg, 0) / data.jobs.length)
+    })).sort((a, b) => b.count - a.count);
+  }, []);
+
+  const maxCount = locationData[0]?.count || 1;
+  const topCities = locationData.slice(0, 6);
+
+  return (
+    <div className="skills-intelligence-view">
+      <div className="skills-header">
+        <h2 className="page-title">Location Analysis</h2>
+        <p className="skills-subtitle">
+          Geographical distribution of tech hiring, top employers per city, and location-specific skill demand across Pakistan.
+        </p>
+      </div>
+
+      {/* KPIs */}
+      <div className="kpis skills-kpi-strip">
+        <div className="card kpi"><b>{locationData.length}</b><span>Hiring Locations</span></div>
+        <div className="card kpi"><b>{locationData[0]?.city}</b><span>#1 Hiring City</span></div>
+        <div className="card kpi"><b>{locationData[0]?.count}</b><span>Jobs in {locationData[0]?.city}</span></div>
+        <div className="card kpi"><b>{locationData.find(l => l.city === 'Remote')?.count || 0}</b><span>Remote Positions</span></div>
+        <div className="card kpi"><b>PKR {locationData[0]?.avgSalary}k</b><span>Avg Salary ({locationData[0]?.city})</span></div>
+      </div>
+
+      {/* ===== SECTION 1: JOBS BY CITY ===== */}
+      <section className="card skills-section">
+        <div className="section-header">
+          <h3>Jobs by City</h3>
+          <span className="section-tag">{locationData.length} Locations</span>
+        </div>
+        <p className="sub">Distribution of 300 job postings across Pakistan's tech hubs and remote positions.</p>
+
+        <div className="skills-table">
+          <div className="skills-table-head">
+            <span style={{ width: '40px' }}>#</span>
+            <span style={{ flex: 1.2 }}>City</span>
+            <span style={{ flex: 2.5 }}>Job Volume</span>
+            <span style={{ width: '100px', textAlign: 'right' }}>Avg Salary</span>
+          </div>
+          <div className="skills-table-body">
+            {locationData.map((loc, idx) => (
+              <div key={loc.city} className="skills-table-row">
+                <span className="rank-col">#{idx + 1}</span>
+                <span className="name-col"><b>{loc.city}</b></span>
+                <div className="bar-col">
+                  <div className="track"><div className="fill" style={{ width: `${(loc.count / maxCount) * 100}%` }}></div></div>
+                  <span className="count-col">{loc.count} jobs ({loc.pct}%)</span>
+                </div>
+                <span className="sal-col">PKR {loc.avgSalary}k</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 2: TOP HIRING LOCATIONS ===== */}
+      <section className="card skills-section">
+        <div className="section-header">
+          <h3>Top Hiring Locations</h3>
+          <span className="section-tag">Top 6 Cities</span>
+        </div>
+        <p className="sub">Leading hiring hubs with top employers, salary benchmarks, and employment type breakdown.</p>
+
+        <div className="tools-domain-grid">
+          {topCities.map(loc => (
+            <div key={loc.city} className="card domain-card">
+              <h4>{loc.city}</h4>
+              <span className="sub">{loc.count} jobs · Avg PKR {loc.avgSalary}k/mo</span>
+
+              <div style={{ marginTop: '12px' }}>
+                <span className="mini-heading">Top Companies:</span>
+                <div className="domain-tools-list">
+                  {loc.topCompanies.map(c => (
+                    <div key={c.name} className="domain-row">
+                      <span className="tool-name">{c.name}</span>
+                      <div className="track"><div className="fill" style={{ width: `${(c.count / loc.topCompanies[0].count) * 100}%` }}></div></div>
+                      <span className="tool-count">{c.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '10px' }}>
+                <span className="mini-heading">Job Types:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                  {loc.types.map(t => (
+                    <span key={t.name} className="pill">{t.name}: {t.count}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== SECTION 3: LOCATION-WISE SKILL DEMAND ===== */}
+      <section className="card skills-section">
+        <div className="section-header">
+          <h3>Location-wise Skill Demand</h3>
+          <span className="section-tag">Skills by City</span>
+        </div>
+        <p className="sub">Most in-demand skills for each major hiring location — see what employers in each city want.</p>
+
+        <div className="grid">
+          {topCities.map(loc => (
+            <div key={loc.city} className="card subcard">
+              <h4>{loc.city} <span className="section-tag" style={{ fontSize: '0.7rem' }}>{loc.count} jobs</span></h4>
+              <p className="sub">Top skills employers look for in {loc.city}.</p>
+              {loc.topSkills.map(skill => (
+                <div key={skill.name} className="row" style={{ margin: '4px -6px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
+                  <div className="track">
+                    <div className="fill" style={{ width: `${(skill.count / loc.topSkills[0].count) * 100}%` }}></div>
+                  </div>
+                  <i>{skill.count}</i>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ============================================================================== */
+/* 7. JOB DRAWER                                                                  */
+/* ============================================================================== */
+function JobDrawer({ job, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    if (job) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [job, onClose]);
+
+  if (!job) return null;
+
+  const role = ROLES[job.r] || {
+    a: 'Work with the engineering team to build impactful software.',
+    r: ['Build features and maintain code quality', 'Collaborate with product and cross-functional teams']
+  };
+
+  const reqs = [
+    job.level === 'Intern' ? 'Currently enrolled in, or recently completed, a relevant degree' : `Experience: ${job.exp}`,
+    `Hands-on knowledge of ${job.skills.slice(0, 3).join(', ')}`,
+    'Strong problem-solving and teamwork skills',
+    'Good written and spoken English'
+  ];
+
+  const padId = (n) => ('000' + n).slice(-3);
+
+  return (
+    <>
+      <div className="overlay open" onClick={onClose} aria-hidden="true" />
+      <aside className="drawer open" role="dialog" aria-modal="true" aria-label="Job details">
+        <button className="close" onClick={onClose} aria-label="Close job details">
+          <svg className="i" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+        </button>
+        <p className="d-id">JOB #{padId(job.id)}</p>
+        <h2 className="d-title">{job.title}</h2>
+        <p className="d-co">{job.company} · {job.loc}</p>
+        <div className="facts">
+          <div className="fact"><span>Salary</span><b>{job.salary}</b></div>
+          <div className="fact"><span>Employment type</span><b>{job.type}</b></div>
+          <div className="fact"><span>Experience</span><b>{job.exp}</b></div>
+          <div className="fact"><span>Posted</span><b>{job.posted}</b></div>
+        </div>
+
+        <h4>About the role</h4>
+        <p className="d-p">
+          {job.company} is hiring a {job.title} {job.loc === 'Remote' ? 'to work remotely with a distributed team. ' : `for its ${job.loc} team. `}{role.a}
+        </p>
+
+        <h4>Responsibilities</h4>
+        <ul>{role.r.map((resp, idx) => (<li key={idx}>{resp}</li>))}</ul>
+
+        <h4>Requirements</h4>
+        <ul>{reqs.map((req, idx) => (<li key={idx}>{req}</li>))}</ul>
+
+        <h4>Skills</h4>
+        <div style={{ marginTop: '8px' }}>
+          {job.skills.map((skill, idx) => (<span key={idx} className="pill">{skill}</span>))}
+        </div>
+
+        <h4>Benefits</h4>
+        <ul>{job.benefits.map((b, idx) => (<li key={idx}>{b}</li>))}</ul>
+      </aside>
+    </>
+  );
+}
+
+/* ============================================================================== */
+/* 8. SIDEBAR                                                                     */
+/* ============================================================================== */
+function Sidebar({ currentView, onViewChange }) {
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: <svg className="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" /></svg> },
+    { id: 'explorer', label: 'Job Explorer', icon: <svg className="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg> },
+    { id: 'skills', label: 'Skills Intelligence', icon: <svg className="i" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6" /><path d="m8 6-6 6 6 6" /></svg> },
+    { id: 'location', label: 'Location Analysis', icon: <svg className="i" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg> },
+    { id: 'employment', label: 'Employment Analysis', icon: <svg className="i" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg> },
+    { id: 'quality', label: 'Data Quality', icon: <svg className="i" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v14a9 3 0 0 0 18 0V5" /><path d="M3 12a9 3 0 0 0 18 0" /></svg> },
+    { id: 'about', label: 'About Project', icon: <svg className="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg> }
+  ];
+
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <svg className="i" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><path d="M2 13h20" /></svg>
+        <span>JobStack</span>
+      </div>
+      <nav aria-label="Dashboard">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            className="nav-item"
+            aria-current={currentView === item.id ? 'page' : undefined}
+            onClick={() => onViewChange(item.id)}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+/* ============================================================================== */
+/* 9. ROOT APP                                                                    */
+/* ============================================================================== */
+function App() {
+  const [hasEntered, setHasEntered] = useState(false);
+  const [currentView, setCurrentView] = useState('overview');
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  return (
+    <div className={`jobstack-app ${hasEntered ? 'in' : ''}`}>
+      <OrbitBackground isLanding={!hasEntered} />
+      {!hasEntered && <LandingPage onEnter={() => setHasEntered(true)} />}
+
+      <div id="dashboard" className="view" style={{ opacity: hasEntered ? 1 : 0 }}>
+        <Sidebar currentView={currentView} onViewChange={(viewId) => { setCurrentView(viewId); setSelectedJob(null); }} />
+        <section className="content" id="content" aria-label={currentView}>
+          {currentView === 'overview' && <Dashboard />}
+          {currentView === 'explorer' && <JobExplorer onSelectJob={(j) => setSelectedJob(j)} />}
+          {currentView === 'skills' && <SkillsIntelligence onSelectJob={(j) => setSelectedJob(j)} />}
+          {currentView === 'location' && <LocationAnalysis />}
+          {currentView === 'employment' && (
+            <div className="dashboard-view">
+              <h2 className="page-title">Employment Analysis</h2>
+              <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>Coming Soon</h3>
+                <p className="sub">Employment type breakdowns, contract modalities, and work arrangement analytics are on the way.</p>
+              </div>
+            </div>
+          )}
+          {currentView === 'quality' && (
+            <div className="dashboard-view">
+              <h2 className="page-title">Data Quality</h2>
+              <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>Coming Soon</h3>
+                <p className="sub">Schema validation reports, missing data audits, and deduplication metrics are on the way.</p>
+              </div>
+            </div>
+          )}
+          {currentView === 'about' && (
+            <div className="dashboard-view">
+              <h2 className="page-title">About Project</h2>
+              <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>Coming Soon</h3>
+                <p className="sub">Project overview, methodology, tech stack, and team details are on the way.</p>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <JobDrawer job={selectedJob} onClose={() => setSelectedJob(null)} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>
