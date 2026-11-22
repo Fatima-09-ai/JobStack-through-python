@@ -911,7 +911,7 @@ function SkillsIntelligence({ onSelectJob }) {
                       <p className="co">{j.company} · {j.loc}</p>
                       <div>
                         <span className="pill hot">{j.type}</span>
-                        <span className="pill">{j.type}</span>
+                        <span className="pill">{j.exp}</span>
                       </div>
                       <p className="skl">{j.skills.join(' · ')}</p>
                     </button>
@@ -1059,7 +1059,7 @@ function SkillsIntelligence({ onSelectJob }) {
                         onClick={() => { setSearchQuery(tool.name); setActiveTab('all'); }}
                       >
                         <span className="tool-name">{tool.name}</span>
-                        <div className="track"><div className="fill" style={{ width: `${(tool.count / 100) * 100}%` }}></div></div>
+                        <div className="track"><div className="fill" style={{ width: `${(tool.count / Math.max(...frameworkToolMetrics.map(t => t.count), 1)) * 100}%` }}></div></div>
                         <span className="tool-count">{tool.count}</span>
                       </div>
                     ))}
@@ -1218,7 +1218,7 @@ function SkillsIntelligence({ onSelectJob }) {
                       <p className="co">{j.company} · {j.loc}</p>
                       <div>
                         <span className="pill hot">{j.type}</span>
-                        <span className="pill">{j.type}</span>
+                        <span className="pill">{j.exp}</span>
                       </div>
                       <p className="skl">{j.skills.join(' · ')}</p>
                     </button>
