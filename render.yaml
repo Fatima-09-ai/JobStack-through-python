@@ -1,0 +1,14 @@
+# Render "Blueprint": New + > Blueprint > pick this repo. Everything below is then created for you.
+services:
+  - type: web
+    name: jobstack-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r deploy/requirements-deploy.txt && python deploy/build_database.py
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: CORS_ORIGINS
+        value: https://jobsstack.netlify.app
