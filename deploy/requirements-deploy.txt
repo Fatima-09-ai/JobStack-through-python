@@ -1,0 +1,7 @@
+# Lean install for the hosted API: only what deploy/build_database.py and the backend need.
+# (The root requirements.txt also installs Jupyter, matplotlib, scipy ... which a web host does not need
+#  and which make the build much slower.)
+pandas>=2.2
+pydantic>=2.6
+fastapi>=0.110
+uvicorn[standard]>=0.29
