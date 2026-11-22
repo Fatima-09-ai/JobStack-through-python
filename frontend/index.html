@@ -12,6 +12,7 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>.seg-entry{background:#efede6;color:#0b0b0c}.seg-mid{background:#88867f;color:#fff}.seg-notstated{background:#d0cec5;color:#0b0b0c}</style>
 </head>
 <body>
 
@@ -82,155 +83,118 @@ function getSkillCategory(skillName) {
   return 'Framework / Tool';
 }
 
-const BASE_DATA = {
-  jobs: 300,
-  companies: 84,
-  skills: 36,
-  locations: [
-    ['Lahore', 62], ['Karachi', 55], ['Islamabad', 48], ['Remote', 30],
-    ['Rawalpindi', 24], ['Faisalabad', 20], ['Peshawar', 15], ['Multan', 14],
-    ['Sialkot', 10], ['Hyderabad', 8], ['Gujranwala', 8], ['Quetta', 6]
-  ],
-  companyTop: [
-    ['Nexa Labs', 21], ['Orbit Systems', 18], ['Brightwave', 16], ['Kinetic Works', 14],
-    ['Lumen Data', 13], ['Harbor Tech', 11], ['Pixel Forge', 10], ['Northstar', 9]
-  ],
-  skillsTop: [
-    ['Python', 142], ['SQL', 128], ['JavaScript', 119], ['React', 96],
-    ['Excel', 88], ['AWS', 74], ['Node.js', 69], ['Docker', 58],
-    ['Communication', 55], ['Git', 51]
-  ],
-  weekly: [18, 21, 19, 24, 22, 27, 26, 29, 28, 31, 27, 28],
-  types: [['Full-time', 198], ['Contract', 52], ['Internship', 30], ['Part-time', 20]]
-};
-
-const ROLES = [
-  { n: 'Software Engineer', s: ['Python', 'Java', 'JavaScript', 'C++', 'Git', 'SQL', 'Docker', 'REST APIs', 'Agile'], a: 'You will design, build and maintain core product features used by thousands of customers.', r: ['Write clean, tested and maintainable code', 'Review pull requests and improve code quality', 'Work with product and design to ship features on schedule'] },
-  { n: 'Frontend Developer', s: ['JavaScript', 'React', 'TypeScript', 'CSS', 'Git', 'Figma'], a: 'You will turn designs into fast, accessible and responsive web interfaces.', r: ['Build reusable UI components', 'Optimize page speed and accessibility', 'Integrate front-end screens with backend APIs'] },
-  { n: 'Backend Developer', s: ['Node.js', 'Python', 'Django', 'Flask', 'SQL', 'PostgreSQL', 'MongoDB', 'Docker', 'REST APIs', 'Git'], a: 'You will own the services and databases that power our platform.', r: ['Design and document REST APIs', 'Model data and write efficient queries', 'Monitor services and fix production issues'] },
-  { n: 'Full-Stack Developer', s: ['React', 'Node.js', 'JavaScript', 'TypeScript', 'MongoDB', 'PostgreSQL', 'Git', 'Docker'], a: 'You will work across the whole stack, from database to user interface.', r: ['Ship features end to end', 'Build APIs and the screens that use them', 'Deploy and maintain applications'] },
-  { n: 'Data Analyst', s: ['SQL', 'Excel', 'Python', 'Tableau', 'Power BI', 'Pandas', 'Communication'], a: 'You will turn raw business data into clear insights that guide decisions.', r: ['Build dashboards and weekly reports', 'Clean and validate datasets', 'Present findings to non-technical teams'] },
-  { n: 'Data Scientist', s: ['Python', 'Pandas', 'SQL', 'TensorFlow', 'PyTorch', 'Spark', 'Communication'], a: 'You will build models and experiments that solve real business problems.', r: ['Explore data and engineer features', 'Train, evaluate and tune models', 'Explain results to stakeholders'] },
-  { n: 'Machine Learning Engineer', s: ['Python', 'PyTorch', 'TensorFlow', 'Docker', 'AWS', 'Git', 'Pandas'], a: 'You will take machine learning models from notebooks into production.', r: ['Build training and inference pipelines', 'Deploy and monitor models', 'Improve model speed and accuracy'] },
-  { n: 'DevOps Engineer', s: ['Docker', 'Kubernetes', 'AWS', 'Linux', 'Git', 'Azure', 'Python'], a: 'You will keep our delivery pipeline and infrastructure fast and reliable.', r: ['Automate builds, tests and deployments', 'Manage containers and cloud resources', 'Set up monitoring and alerts'] },
-  { n: 'QA Engineer', s: ['Selenium', 'JavaScript', 'Jira', 'Agile', 'SQL', 'Communication'], a: 'You will make sure every release is stable before it reaches users.', r: ['Write and run manual and automated tests', 'Report and track bugs', 'Help define quality standards for the team'] },
-  { n: 'Product Manager', s: ['Agile', 'Jira', 'Communication', 'Leadership', 'Excel', 'SQL'], a: 'You will decide what we build next and guide it from idea to launch.', r: ['Gather user needs and define requirements', 'Prioritize the product roadmap', 'Coordinate design, engineering and marketing'] },
-  { n: 'UI/UX Designer', s: ['Figma', 'CSS', 'Communication', 'JavaScript'], a: 'You will shape how our products look, feel and work for users.', r: ['Create wireframes, prototypes and design systems', 'Run user research and usability tests', 'Hand off polished designs to developers'] },
-  { n: 'Business Analyst', s: ['Excel', 'SQL', 'Power BI', 'Communication', 'Jira', 'Agile'], a: 'You will connect business goals with data and technical teams.', r: ['Document requirements and processes', 'Analyze performance metrics', 'Recommend improvements to stakeholders'] },
-  { n: 'Database Administrator', s: ['SQL', 'PostgreSQL', 'MongoDB', 'Linux', 'AWS'], a: 'You will keep our databases fast, secure and always available.', r: ['Tune queries and indexes', 'Manage backups and recovery', 'Control access and monitor health'] },
-  { n: 'Cloud Engineer', s: ['AWS', 'Azure', 'Kubernetes', 'Linux', 'Docker', 'Networking'], a: 'You will design and run the cloud systems behind our products.', r: ['Provision and secure cloud infrastructure', 'Control cost and capacity', 'Support teams moving workloads to the cloud'] },
-  { n: 'Mobile App Developer', s: ['Flutter', 'JavaScript', 'React', 'Java', 'REST APIs', 'Git'], a: 'You will build mobile apps that people use every day.', r: ['Develop features for Android and iOS', 'Connect apps to backend APIs', 'Fix crashes and improve performance'] },
-  { n: 'Technical Support Engineer', s: ['Communication', 'Linux', 'Networking', 'SQL', 'Jira'], a: 'You will help customers solve technical problems quickly and clearly.', r: ['Troubleshoot customer issues', 'Document fixes in the knowledge base', 'Escalate bugs to engineering with clear detail'] },
-  { n: 'Project Manager', s: ['Agile', 'Jira', 'Leadership', 'Communication', 'Excel'], a: 'You will keep projects on time, on budget and moving in one direction.', r: ['Plan scope, schedules and budgets', 'Run stand-ups and sprint reviews', 'Report progress and risks to leadership'] },
-  { n: 'Digital Marketing Specialist', s: ['SEO', 'Excel', 'Communication', 'Tableau'], a: 'You will grow our audience and measure what works.', r: ['Plan and run online campaigns', 'Improve search rankings', 'Track results and report on ROI'] },
-  { n: 'Data Engineer', s: ['Python', 'SQL', 'Spark', 'AWS', 'Docker', 'PostgreSQL'], a: 'You will build the pipelines that deliver trusted data to every team.', r: ['Design and maintain ETL pipelines', 'Keep data accurate and on time', 'Optimize storage and processing cost'] },
-  { n: 'Cybersecurity Analyst', s: ['Networking', 'Linux', 'Python', 'Communication', 'AWS'], a: 'You will protect our systems and data from threats.', r: ['Monitor systems for suspicious activity', 'Investigate and respond to incidents', 'Run vulnerability scans and fix gaps'] }
-];
-
-const LEVELS = [
-  { n: 'Intern', pre: '', exp: 'No experience required', lo: 25, hi: 45 },
-  { n: 'Junior', pre: 'Junior ', exp: '0–2 years', lo: 80, hi: 130 },
-  { n: 'Mid-level', pre: '', exp: '2–4 years', lo: 150, hi: 230 },
-  { n: 'Senior', pre: 'Senior ', exp: '5+ years', lo: 260, hi: 400 },
-  { n: 'Lead', pre: 'Lead ', exp: '7+ years', lo: 420, hi: 600 }
-];
-
-const BENEFITS = [
-  'Health insurance', 'Flexible working hours', 'Annual performance bonus',
-  'Paid learning budget', 'Provident fund', 'Hybrid work option', 'Free lunch',
-  'Career growth plan', 'Paid annual leave'
-];
-
-function generateJobs() {
-  const localRand = createRng(2026);
-  function localShuffle(a) {
-    const copy = [...a];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(localRand() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  }
-  function localPick(a) { return a[Math.floor(localRand() * a.length)]; }
-
-  const prefixes = ['Apex', 'Zenith', 'Cobalt', 'Vertex', 'Quantum', 'Solis', 'Ember', 'Atlas', 'Nimbus', 'Helix', 'Cipher', 'Vector', 'Prism', 'Falcon', 'Granite', 'Aurora', 'Pioneer', 'Summit', 'Echo', 'Indigo'];
-  const suffixes = ['Systems', 'Labs', 'Digital', 'Soft', 'Works', 'Analytics', 'Cloud', 'Technologies'];
-  const others = [];
-  prefixes.forEach(p => { suffixes.forEach(s => { others.push(`${p} ${s}`); }); });
-  localShuffle(others);
-
-  const compCounts = [...BASE_DATA.companyTop];
-  others.slice(0, 76).forEach((n, i) => { compCounts.push([n, i < 36 ? 3 : 2]); });
-
-  const locs = localShuffle(expand(BASE_DATA.locations));
-  const types = localShuffle(expand(BASE_DATA.types));
-  const comps = localShuffle(expand(compCounts));
-
-  const jobs = [];
-  for (let k = 0; k < BASE_DATA.jobs; k++) {
-    const ri = Math.floor(localRand() * ROLES.length);
-    const role = ROLES[ri];
-    const type = types[k];
-    const li = type === 'Internship' ? 0 : localPick([1, 1, 2, 2, 2, 3, 3, 4]);
-    const lv = LEVELS[li];
-    let lo = roundToFive(lv.lo + localRand() * (lv.hi - lv.lo));
-    let hi = roundToFive(lo * (1.25 + localRand() * 0.2));
-    if (type === 'Part-time') { lo = roundToFive(lo * 0.55); hi = roundToFive(hi * 0.55); }
-    if (hi <= lo) hi = lo + 5;
-    const days = Math.floor(localRand() * 84);
-
-    const roleSkills = localShuffle(role.s);
-    const pickedSkills = roleSkills.slice(0, Math.min(role.s.length, 3 + Math.floor(localRand() * 3)));
-
-    jobs.push({
-      r: ri,
-      roleName: role.n,
-      level: lv.n,
-      exp: lv.exp,
-      title: li === 0 ? `${role.n} Intern` : `${lv.pre}${role.n}`,
-      company: comps[k],
-      loc: locs[k],
-      type,
-      salaryMin: lo,
-      salaryMax: hi,
-      salaryAvg: Math.round((lo + hi) / 2),
-      salary: `PKR ${lo}k – ${hi}k / month`,
-      days,
-      posted: days === 0 ? 'Today' : days === 1 ? '1 day ago' : days < 14 ? `${days} days ago` : `${Math.floor(days / 7)} weeks ago`,
-      skills: pickedSkills,
-      benefits: localShuffle(BENEFITS).slice(0, 4)
-    });
-  }
-
-  jobs.sort((a, b) => a.days - b.days);
-  jobs.forEach((j, i) => { j.id = i + 1; });
-  return jobs;
+/* All data comes from the FastAPI backend. Nothing in this file is hardcoded or generated. */
+const API_URL = ('%VITE_API_URL%'.charAt(0) === '%' ? 'http://127.0.0.1:8000' : '%VITE_API_URL%').replace(/\/$/, '');
+async function api(path) {
+  const res = await fetch(API_URL + path);
+  if (!res.ok) throw new Error(path + ' returned ' + res.status);
+  return res.json();
 }
 
-const JOBS = generateJobs();
+let JOBS = [];
+let BASE_DATA = {};
+const LEVEL_KEYS = ['Entry', 'Junior', 'Mid', 'Senior', 'Not stated'];
+const emptyLevels = () => Object.fromEntries(LEVEL_KEYS.map(k => [k, 0]));
+
+// Groups the stated experience text (e.g. "3 Years Job Exp.") into a level. No guessing when it is missing.
+function levelOf(exp) {
+  if (!exp) return 'Not stated';
+  if (/student|fresh|<\s*1/i.test(exp)) return 'Entry';
+  const m = exp.match(/(\d+)/);
+  if (!m) return 'Not stated';
+  const n = +m[1];
+  return n <= 2 ? 'Junior' : n <= 5 ? 'Mid' : 'Senior';
+}
+
+function postedLabel(iso) {
+  if (!iso) return 'Date not available';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
+  if (days < 1) return 'Today';
+  if (days < 14) return days + ' days ago';
+  if (days < 60) return Math.floor(days / 7) + ' weeks ago';
+  if (days < 730) return Math.floor(days / 30) + ' months ago';
+  return Math.floor(days / 365) + ' years ago';
+}
+
+async function loadAll() {
+  const [summary, byType, byWork, byExp, bySource, locs, skillList, topCo] = await Promise.all([
+    api('/analytics/summary'), api('/analytics/by-employment-type'), api('/analytics/by-work-mode'),
+    api('/analytics/by-experience'), api('/analytics/by-source'), api('/locations'),
+    api('/skills'), api('/analytics/top-companies?limit=8')
+  ]);
+
+  const pages = Math.ceil(summary.total_postings / 100);
+  const jobPages = await Promise.all(Array.from({ length: pages }, (_, i) => api('/jobs?limit=100&offset=' + i * 100)));
+
+  // job -> skills, taken from /skills/{name}/jobs
+  const skillsByJob = new Map();
+  await Promise.all(skillList.map(async sk => {
+    for (let off = 0; off < sk.n_postings; off += 100) {
+      const p = await api('/skills/' + encodeURIComponent(sk.name) + '/jobs?limit=100&offset=' + off);
+      p.items.forEach(it => {
+        const k = String(it.posting_pk);
+        if (!skillsByJob.has(k)) skillsByJob.set(k, []);
+        skillsByJob.get(k).push(sk.name);
+      });
+    }
+  }));
+
+  JOBS = jobPages.flatMap(p => p.items).map(j => ({
+    id: j.posting_pk,
+    title: j.title || 'Untitled',
+    roleName: j.standardized_title || j.title || 'Untitled',
+    company: j.company_name || 'Not stated',
+    loc: j.city || 'Not stated',
+    type: j.employment_type || 'not stated',
+    exp: j.experience || 'not stated',
+    level: levelOf(j.experience),
+    category: j.category,
+    workMode: j.work_mode,
+    postedAt: j.posted_at,
+    posted: postedLabel(j.posted_at),
+    skills: skillsByJob.get(String(j.posting_pk)) || []
+  }));
+
+  // jobs per week, only from postings that have a date
+  const dated = JOBS.filter(j => j.postedAt).map(j => new Date(j.postedAt).getTime());
+  const latest = dated.length ? Math.max(...dated) : 0;
+  const weekly = Array(12).fill(0);
+  dated.forEach(t => { const w = Math.floor((latest - t) / (7 * 864e5)); if (w < 12) weekly[11 - w]++; });
+
+  BASE_DATA = {
+    jobs: summary.total_postings,
+    companies: summary.total_companies,
+    skills: summary.total_skills,
+    cities: summary.total_cities,
+    locations: locs.slice(0, 12).map(l => [l.city, l.n_postings]),
+    allLocations: locs.map(l => [l.city, l.n_postings]),
+    companyTop: topCo.map(c => [c.label, c.n_postings]),
+    skillsTop: skillList.slice(0, 10).map(s => [s.name, s.n_postings]),
+    types: byType.slice(0, 6).map(t => [t.label, t.n_postings]),
+    byType, byWork, byExp, bySource,
+    remote: (byWork.find(w => w.label.toLowerCase() === 'remote') || { n_postings: 0 }).n_postings,
+    weekly,
+    weeklyCovered: weekly.reduce((a, b) => a + b, 0),
+    datedJobs: dated.length
+  };
+}
 
 function getSkillsSummary(jobs = JOBS) {
   const totalJobs = jobs.length;
   const countMap = new Map();
-  const salaryMap = new Map();
 
   jobs.forEach(job => {
     job.skills.forEach(skill => {
       countMap.set(skill, (countMap.get(skill) || 0) + 1);
-      if (!salaryMap.has(skill)) salaryMap.set(skill, []);
-      salaryMap.get(skill).push(job.salaryAvg);
     });
   });
 
   const list = Array.from(countMap.entries()).map(([name, count]) => {
-    const salaries = salaryMap.get(name) || [];
-    const avgSalary = salaries.length ? Math.round(salaries.reduce((a, b) => a + b, 0) / salaries.length) : 0;
     return {
       name,
       count,
       pct: parseFloat(((count / totalJobs) * 100).toFixed(1)),
-      category: getSkillCategory(name),
-      avgSalary
+      category: getSkillCategory(name)
     };
   });
   list.sort((a, b) => b.count - a.count);
@@ -242,7 +206,7 @@ function getLanguageMetrics(jobs = JOBS) {
   const langList = summary.filter(s => LANGUAGES_SET.has(s.name));
   return langList.map(lang => {
     const matching = jobs.filter(j => j.skills.includes(lang.name));
-    const levels = { Intern: 0, Junior: 0, 'Mid-level': 0, Senior: 0, Lead: 0 };
+    const levels = emptyLevels();
     matching.forEach(j => { levels[j.level] = (levels[j.level] || 0) + 1; });
     return { ...lang, totalPostings: matching.length, levels };
   });
@@ -364,13 +328,9 @@ function getSkillDeepDive(skillName, jobs = JOBS) {
   matching.forEach(j => { locMap.set(j.loc, (locMap.get(j.loc) || 0) + 1); });
   const topLocations = Array.from(locMap.entries()).map(([loc, count]) => ({ loc, count })).sort((a, b) => b.count - a.count);
 
-  const levelCounts = { Intern: 0, Junior: 0, 'Mid-level': 0, Senior: 0, Lead: 0 };
+  const levelCounts = emptyLevels();
   matching.forEach(j => { levelCounts[j.level] = (levelCounts[j.level] || 0) + 1; });
 
-  const avgSalary = found ? found.avgSalary : 0;
-  const salaries = matching.map(j => j.salaryAvg);
-  const minSalary = Math.min(...salaries);
-  const maxSalary = Math.max(...salaries);
 
   return {
     name: canonical,
@@ -378,8 +338,6 @@ function getSkillDeepDive(skillName, jobs = JOBS) {
     rank: rank || 'N/A',
     postingsCount: matching.length,
     marketSharePct: parseFloat(((matching.length / jobs.length) * 100).toFixed(1)),
-    avgSalary,
-    salaryRange: `PKR ${minSalary}k – ${maxSalary}k / mo`,
     levelCounts,
     coOccurring,
     topRoles,
@@ -470,7 +428,7 @@ function Dashboard() {
     };
   });
 
-  const linePoints = D.weekly.map((n, i) => [14 + i * (292 / (D.weekly.length - 1)), 120 - (n / 35) * 100]);
+  const linePoints = D.weekly.map((n, i) => [14 + i * (292 / (D.weekly.length - 1)), 120 - (n / Math.max(...D.weekly, 1)) * 100]);
   const polylineStr = linePoints.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
 
   return (
@@ -546,7 +504,7 @@ function Dashboard() {
           {D.skillsTop.map(([name, count]) => (
             <div key={name} className="row">
               <span>{name}</span>
-              <div className="track"><div className="fill" style={{ width: `${(count / 150) * 100}%` }}></div></div>
+              <div className="track"><div className="fill" style={{ width: `${(count / Math.max(...D.skillsTop.map(x => x[1]), 1)) * 100}%` }}></div></div>
               <i>{count}</i>
             </div>
           ))}
@@ -558,7 +516,7 @@ function Dashboard() {
           {D.companyTop.map(([comp, count]) => (
             <div key={comp} className="row">
               <span>{comp}</span>
-              <div className="track"><div className="fill" style={{ width: `${(count / 24) * 100}%` }}></div></div>
+              <div className="track"><div className="fill" style={{ width: `${(count / Math.max(...D.companyTop.map(x => x[1]), 1)) * 100}%` }}></div></div>
               <i>{count}</i>
             </div>
           ))}
@@ -566,7 +524,7 @@ function Dashboard() {
 
         <div className="card line">
           <h3>Jobs posted per week</h3>
-          <p className="sub">300 jobs over 12 weeks.</p>
+          <p className="sub">{D.weeklyCovered} of {D.jobs} jobs have a posting date inside the latest 12 weeks.</p>
           <svg viewBox="0 0 320 150" role="img" aria-label="Jobs posted per week">
             <line x1="14" y1="120" x2="306" y2="120" stroke="currentColor" opacity=".3" />
             <polyline points={polylineStr} fill="none" stroke="#0b0b0c" strokeWidth="2.5" strokeLinejoin="miter" />
@@ -586,11 +544,11 @@ function Dashboard() {
 
         <div className="card">
           <h3>Jobs by type</h3>
-          <p className="sub">Share of the 300 jobs.</p>
+          <p className="sub">Share of the {D.jobs} jobs.</p>
           {D.types.map(([type, count]) => (
             <div key={type} className="row">
               <span>{type}</span>
-              <div className="track"><div className="fill" style={{ width: `${(count / 200) * 100}%` }}></div></div>
+              <div className="track"><div className="fill" style={{ width: `${(count / Math.max(...D.types.map(x => x[1]), 1)) * 100}%` }}></div></div>
               <i>{count}</i>
             </div>
           ))}
@@ -663,7 +621,7 @@ function JobExplorer({ onSelectJob }) {
             type="search"
             value={query}
             onChange={(e) => { setQuery(e.target.value); setCurrentPage(1); }}
-            placeholder="e.g. Data Analyst, Nexa Labs, Python"
+            placeholder="e.g. Data Scientist, Python, Lahore"
             autoComplete="off"
           />
         </div>
@@ -672,7 +630,7 @@ function JobExplorer({ onSelectJob }) {
           <label htmlFor="loc">Location</label>
           <select id="loc" value={location} onChange={(e) => { setLocation(e.target.value); setCurrentPage(1); }}>
             <option value="">All locations</option>
-            {BASE_DATA.locations.map(([city, count]) => (
+            {BASE_DATA.allLocations.map(([city, count]) => (
               <option key={city} value={city}>{city} ({count})</option>
             ))}
           </select>
@@ -707,7 +665,7 @@ function JobExplorer({ onSelectJob }) {
               </div>
               <p className="skl">{j.skills.slice(0, 4).join(' · ')}</p>
               <div className="foot">
-                <span>{j.salary}</span>
+                <span>{j.exp}</span>
                 <span>{j.posted}</span>
               </div>
             </button>
@@ -754,17 +712,18 @@ function SkillsIntelligence({ onSelectJob }) {
   const languageMetrics = useMemo(() => getLanguageMetrics(JOBS), []);
   const frameworkToolMetrics = useMemo(() => getFrameworkToolMetrics(JOBS), []);
   const { pairs: skillPairs, inScopeJobs } = useMemo(
-    () => getSkillPairs(JOBS, { excludeSoftSkills, minCount: 4 }),
+    () => getSkillPairs(JOBS, { excludeSoftSkills, minCount: 2 }),
     [excludeSoftSkills]
   );
 
   const matrixSkills = useMemo(
-    () => ['Python', 'SQL', 'JavaScript', 'React', 'Docker', 'AWS', 'Git', 'Pandas', 'Node.js', 'Excel'],
-    []
+    () => allSkillsSummary.filter(s => !SOFT_SKILLS_SET.has(s.name)).slice(0, 10).map(s => s.name),
+    [allSkillsSummary]
   );
 
   const coocMatrix = useMemo(() => getCooccurrenceMatrix(JOBS, matrixSkills), [matrixSkills]);
   const deepDiveData = useMemo(() => getSkillDeepDive(searchQuery, JOBS), [searchQuery]);
+  const matrixMax = Math.max(1, ...matrixSkills.flatMap(a => matrixSkills.filter(b => b !== a).map(b => coocMatrix[a]?.[b] || 0)));
 
   const filteredDemandedSkills = useMemo(() => {
     return allSkillsSummary.filter(s => {
@@ -782,16 +741,18 @@ function SkillsIntelligence({ onSelectJob }) {
     return JOBS.filter(j => j.skills.includes(sA) && j.skills.includes(sB));
   }, [selectedPairFilter]);
 
+  const jobsWithSkills = JOBS.filter(j => j.skills.length);
+  const avgSkillsPerJob = jobsWithSkills.length ? (jobsWithSkills.reduce((a, j) => a + j.skills.length, 0) / jobsWithSkills.length).toFixed(1) : 'n/a';
   const topLanguages = languageMetrics.slice(0, 8);
   const maxLangCount = Math.max(...topLanguages.map(l => l.count), 1);
-  const maxSkillCount = allSkillsSummary[0]?.count || 150;
+  const maxSkillCount = allSkillsSummary[0]?.count || 1;
 
   return (
     <div className="skills-intelligence-view">
       <div className="skills-header">
         <h2 className="page-title">Skills Intelligence</h2>
         <p className="skills-subtitle">
-          Market demand, language benchmarks, framework prevalence & co-occurrence graphs across 300 verified postings.
+          Market demand, language benchmarks, framework prevalence & co-occurrence graphs across {BASE_DATA.jobs} postings.
         </p>
       </div>
 
@@ -807,10 +768,10 @@ function SkillsIntelligence({ onSelectJob }) {
       {/* KPI Highlights Strip */}
       <div className="kpis skills-kpi-strip">
         <div className="card kpi"><b>{allSkillsSummary.length}</b><span>Total Skills Extracted</span></div>
-        <div className="card kpi"><b>47.3%</b><span>#1 Top Language (Python)</span></div>
-        <div className="card kpi"><b>32.0%</b><span>#1 Top Framework (React)</span></div>
-        <div className="card kpi"><b>78</b><span>Top Pair (Python + SQL)</span></div>
-        <div className="card kpi"><b>4.8</b><span>Avg Skills per Job</span></div>
+        <div className="card kpi"><b>{languageMetrics[0] ? ((languageMetrics[0].count / BASE_DATA.jobs) * 100).toFixed(1) + '%' : 'n/a'}</b><span>#1 Top Language ({languageMetrics[0]?.name || 'n/a'})</span></div>
+        <div className="card kpi"><b>{frameworkToolMetrics[0] ? ((frameworkToolMetrics[0].count / BASE_DATA.jobs) * 100).toFixed(1) + '%' : 'n/a'}</b><span>#1 Top Framework/Tool ({frameworkToolMetrics[0]?.name || 'n/a'})</span></div>
+        <div className="card kpi"><b>{skillPairs[0]?.count ?? 'n/a'}</b><span>Top Pair ({skillPairs[0] ? skillPairs[0].skillA + ' + ' + skillPairs[0].skillB : 'n/a'})</span></div>
+        <div className="card kpi"><b>{avgSkillsPerJob}</b><span>Avg Skills per Job (jobs with skills)</span></div>
       </div>
 
       {/* ========================================================================= */}
@@ -823,7 +784,7 @@ function SkillsIntelligence({ onSelectJob }) {
             <span className="section-tag">Interactive Explorer</span>
           </div>
           <p className="sub">
-            Search any skill to inspect market rank, salary ranges, co-occurring technologies, and matching job postings.
+            Search any skill to inspect market rank, co-occurring technologies, and matching job postings.
           </p>
 
           <div className="skill-search-bar">
@@ -832,7 +793,7 @@ function SkillsIntelligence({ onSelectJob }) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search skill (e.g. Python, React, AWS, SQL, Docker, Pandas, Git)..."
+                placeholder="Search skill (e.g. Python, React, AWS, SQL, Git)..."
                 className="skill-search-input"
               />
             </div>
@@ -845,7 +806,7 @@ function SkillsIntelligence({ onSelectJob }) {
 
           <div className="quick-skill-pills">
             <span className="quick-label">Popular Skills:</span>
-            {['Python', 'SQL', 'JavaScript', 'React', 'AWS', 'Docker', 'Pandas', 'Git', 'Excel', 'Node.js', 'TypeScript'].map(skl => (
+            {allSkillsSummary.slice(0, 11).map(x => x.name).map(skl => (
               <button
                 key={skl}
                 className={`pill-btn ${searchQuery.toLowerCase() === skl.toLowerCase() ? 'active' : ''}`}
@@ -870,10 +831,8 @@ function SkillsIntelligence({ onSelectJob }) {
               </div>
 
               <div className="facts" style={{ margin: '14px 0' }}>
-                <div className="fact"><span>Job Postings</span><b>{deepDiveData.postingsCount} / 300 ({deepDiveData.marketSharePct}%)</b></div>
-                <div className="fact"><span>Avg Monthly Salary</span><b>PKR {deepDiveData.avgSalary}k / mo</b></div>
-                <div className="fact"><span>Salary Range</span><b>{deepDiveData.salaryRange}</b></div>
-                <div className="fact"><span>Top Hiring City</span><b>{deepDiveData.topLocations[0]?.loc || 'Lahore'} ({deepDiveData.topLocations[0]?.count} jobs)</b></div>
+                <div className="fact"><span>Job Postings</span><b>{deepDiveData.postingsCount} / {BASE_DATA.jobs} ({deepDiveData.marketSharePct}%)</b></div>
+                <div className="fact"><span>Top Hiring City</span><b>{deepDiveData.topLocations[0]?.loc || 'n/a'} ({deepDiveData.topLocations[0]?.count} jobs)</b></div>
               </div>
 
               <div className="level-distribution-box">
@@ -952,7 +911,7 @@ function SkillsIntelligence({ onSelectJob }) {
                       <p className="co">{j.company} · {j.loc}</p>
                       <div>
                         <span className="pill hot">{j.type}</span>
-                        <span className="pill">{j.salary}</span>
+                        <span className="pill">{j.type}</span>
                       </div>
                       <p className="skl">{j.skills.join(' · ')}</p>
                     </button>
@@ -979,7 +938,7 @@ function SkillsIntelligence({ onSelectJob }) {
             <span className="section-tag">{filteredDemandedSkills.length} Skills</span>
           </div>
           <p className="sub">
-            Ranked frequency of extracted skills across 300 job postings with market share and salary correlation.
+            Ranked frequency of extracted skills across {BASE_DATA.jobs} job postings with market share.
           </p>
 
           <div className="chips" style={{ marginBottom: '16px' }}>
@@ -1001,7 +960,6 @@ function SkillsIntelligence({ onSelectJob }) {
               <span style={{ flex: 1.2 }}>Skill</span>
               <span style={{ width: '130px' }}>Category</span>
               <span style={{ flex: 2 }}>Postings & Market Penetration</span>
-              <span style={{ width: '90px', textAlign: 'right' }}>Avg Salary</span>
             </div>
             <div className="skills-table-body">
               {filteredDemandedSkills.map((item, idx) => (
@@ -1018,7 +976,6 @@ function SkillsIntelligence({ onSelectJob }) {
                     <div className="track"><div className="fill" style={{ width: `${(item.count / maxSkillCount) * 100}%` }}></div></div>
                     <span className="count-col">{item.count} jobs ({item.pct}%)</span>
                   </div>
-                  <span className="sal-col">PKR {item.avgSalary}k</span>
                 </div>
               ))}
             </div>
@@ -1056,13 +1013,12 @@ function SkillsIntelligence({ onSelectJob }) {
 
             <div className="card subcard">
               <h4>Seniority & Compensation Benchmarks</h4>
-              <p className="sub">Experience profile and average salary per language.</p>
+              <p className="sub">Experience profile per language (grouped from the experience stated in each posting).</p>
               <div className="lang-benchmarks-list">
                 {topLanguages.map(lang => (
                   <div key={lang.name} className="lang-benchmark-item">
                     <div className="lang-item-top">
                       <b>{lang.name}</b>
-                      <span>Avg PKR {lang.avgSalary}k / mo</span>
                     </div>
                     <div className="lang-mini-levels">
                       {Object.entries(lang.levels).map(([lvl, cnt]) => (
@@ -1154,7 +1110,7 @@ function SkillsIntelligence({ onSelectJob }) {
                     <span className="pair-rank">#{idx + 1}</span>
                     <span className="pair-names"><b>{pair.skillA}</b> + <b>{pair.skillB}</b></span>
                     <div className="track" style={{ flex: 1, margin: '0 10px' }}>
-                      <div className="fill" style={{ width: `${(pair.count / 80) * 100}%` }}></div>
+                      <div className="fill" style={{ width: `${(pair.count / Math.max(...skillPairs.map(x => x.count), 1)) * 100}%` }}></div>
                     </div>
                     <span className="pair-count">{pair.count} jobs ({pair.pct}%)</span>
                   </div>
@@ -1163,41 +1119,15 @@ function SkillsIntelligence({ onSelectJob }) {
             </div>
 
             <div className="card subcard">
-              <h4>High-Synergy Tech Stacks</h4>
-              <p className="sub">Standard multi-skill combinations in the market.</p>
+              <h4>Strongest Skill Pairs</h4>
+              <p className="sub">The pairs that appear together most often in the postings.</p>
               <div className="tech-stack-cards">
-                <div className="stack-card">
-                  <b>Python Data Stack</b>
-                  <p className="sub">Data Engineering & Analytics</p>
-                  <div className="stack-pills">
-                    <span className="pill">Python</span><span className="pill">SQL</span>
-                    <span className="pill">Pandas</span><span className="pill">Docker</span>
+                {skillPairs.slice(0, 4).map(pr => (
+                  <div key={pr.skillA + pr.skillB} className="stack-card">
+                    <b>{pr.skillA} + {pr.skillB}</b>
+                    <p className="sub">{pr.count} postings ({pr.pct}% of all)</p>
                   </div>
-                </div>
-                <div className="stack-card">
-                  <b>Modern Full-Stack Web</b>
-                  <p className="sub">Product Engineering</p>
-                  <div className="stack-pills">
-                    <span className="pill">React</span><span className="pill">JavaScript</span>
-                    <span className="pill">Node.js</span><span className="pill">Git</span>
-                  </div>
-                </div>
-                <div className="stack-card">
-                  <b>Cloud & DevOps Stack</b>
-                  <p className="sub">Infrastructure & Deployment</p>
-                  <div className="stack-pills">
-                    <span className="pill">Docker</span><span className="pill">AWS</span>
-                    <span className="pill">Kubernetes</span><span className="pill">Linux</span>
-                  </div>
-                </div>
-                <div className="stack-card">
-                  <b>Machine Learning Systems</b>
-                  <p className="sub">Model Training & Inference</p>
-                  <div className="stack-pills">
-                    <span className="pill">Python</span><span className="pill">PyTorch</span>
-                    <span className="pill">TensorFlow</span><span className="pill">AWS</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1229,7 +1159,7 @@ function SkillsIntelligence({ onSelectJob }) {
                       {matrixSkills.map(s2 => {
                         const count = coocMatrix[s1]?.[s2] || 0;
                         const isSelf = s1 === s2;
-                        const intensity = isSelf ? 0 : Math.min(1, count / 75);
+                        const intensity = isSelf ? 0 : Math.min(1, count / matrixMax);
                         const isHovered = matrixHoverCell && ((matrixHoverCell.s1 === s1 && matrixHoverCell.s2 === s2) || (matrixHoverCell.s1 === s2 && matrixHoverCell.s2 === s1));
 
                         const cellBg = isSelf
@@ -1288,7 +1218,7 @@ function SkillsIntelligence({ onSelectJob }) {
                       <p className="co">{j.company} · {j.loc}</p>
                       <div>
                         <span className="pill hot">{j.type}</span>
-                        <span className="pill">{j.salary}</span>
+                        <span className="pill">{j.type}</span>
                       </div>
                       <p className="skl">{j.skills.join(' · ')}</p>
                     </button>
@@ -1327,8 +1257,7 @@ function LocationAnalysis() {
       pct: parseFloat(((data.jobs.length / JOBS.length) * 100).toFixed(1)),
       topSkills: Array.from(data.skills.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 6),
       topCompanies: Array.from(data.companies.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5),
-      types: Array.from(data.types.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
-      avgSalary: Math.round(data.jobs.reduce((sum, j) => sum + j.salaryAvg, 0) / data.jobs.length)
+      types: Array.from(data.types.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
     })).sort((a, b) => b.count - a.count);
   }, []);
 
@@ -1340,7 +1269,7 @@ function LocationAnalysis() {
       <div className="skills-header">
         <h2 className="page-title">Location Analysis</h2>
         <p className="skills-subtitle">
-          Geographical distribution of tech hiring, top employers per city, and location-specific skill demand across Pakistan.
+          Geographical distribution of tech hiring, top employers per city, and location-specific skill demand.
         </p>
       </div>
 
@@ -1349,8 +1278,8 @@ function LocationAnalysis() {
         <div className="card kpi"><b>{locationData.length}</b><span>Hiring Locations</span></div>
         <div className="card kpi"><b>{locationData[0]?.city}</b><span>#1 Hiring City</span></div>
         <div className="card kpi"><b>{locationData[0]?.count}</b><span>Jobs in {locationData[0]?.city}</span></div>
-        <div className="card kpi"><b>{locationData.find(l => l.city === 'Remote')?.count || 0}</b><span>Remote Positions</span></div>
-        <div className="card kpi"><b>PKR {locationData[0]?.avgSalary}k</b><span>Avg Salary ({locationData[0]?.city})</span></div>
+        <div className="card kpi"><b>{BASE_DATA.remote}</b><span>Remote Positions</span></div>
+        <div className="card kpi"><b>{BASE_DATA.companies}</b><span>Hiring Companies</span></div>
       </div>
 
       {/* ===== SECTION 1: JOBS BY CITY ===== */}
@@ -1359,14 +1288,13 @@ function LocationAnalysis() {
           <h3>Jobs by City</h3>
           <span className="section-tag">{locationData.length} Locations</span>
         </div>
-        <p className="sub">Distribution of 300 job postings across Pakistan's tech hubs and remote positions.</p>
+        <p className="sub">Distribution of {BASE_DATA.jobs} job postings across the cities in the dataset.</p>
 
         <div className="skills-table">
           <div className="skills-table-head">
             <span style={{ width: '40px' }}>#</span>
             <span style={{ flex: 1.2 }}>City</span>
             <span style={{ flex: 2.5 }}>Job Volume</span>
-            <span style={{ width: '100px', textAlign: 'right' }}>Avg Salary</span>
           </div>
           <div className="skills-table-body">
             {locationData.map((loc, idx) => (
@@ -1377,7 +1305,6 @@ function LocationAnalysis() {
                   <div className="track"><div className="fill" style={{ width: `${(loc.count / maxCount) * 100}%` }}></div></div>
                   <span className="count-col">{loc.count} jobs ({loc.pct}%)</span>
                 </div>
-                <span className="sal-col">PKR {loc.avgSalary}k</span>
               </div>
             ))}
           </div>
@@ -1390,13 +1317,13 @@ function LocationAnalysis() {
           <h3>Top Hiring Locations</h3>
           <span className="section-tag">Top 6 Cities</span>
         </div>
-        <p className="sub">Leading hiring hubs with top employers, salary benchmarks, and employment type breakdown.</p>
+        <p className="sub">Leading hiring hubs with top employers, top skills and employment type breakdown.</p>
 
         <div className="tools-domain-grid">
           {topCities.map(loc => (
             <div key={loc.city} className="card domain-card">
               <h4>{loc.city}</h4>
-              <span className="sub">{loc.count} jobs · Avg PKR {loc.avgSalary}k/mo</span>
+              <span className="sub">{loc.count} jobs</span>
 
               <div style={{ marginTop: '12px' }}>
                 <span className="mini-heading">Top Companies:</span>
@@ -1458,26 +1385,29 @@ function LocationAnalysis() {
 /* 7. JOB DRAWER                                                                  */
 /* ============================================================================== */
 function JobDrawer({ job, onClose }) {
+  const [detail, setDetail] = useState(null);
+
   useEffect(() => {
     const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
     if (job) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [job, onClose]);
 
+  useEffect(() => {
+    setDetail(null);
+    if (!job) return undefined;
+    let alive = true;
+    api('/jobs/' + job.id).then(d => { if (alive) setDetail(d); }).catch(() => { if (alive) setDetail({ error: true }); });
+    return () => { alive = false; };
+  }, [job]);
+
   if (!job) return null;
 
-  const role = ROLES[job.r] || {
-    a: 'Work with the engineering team to build impactful software.',
-    r: ['Build features and maintain code quality', 'Collaborate with product and cross-functional teams']
-  };
-
-  const reqs = [
-    job.level === 'Intern' ? 'Currently enrolled in, or recently completed, a relevant degree' : `Experience: ${job.exp}`,
-    `Hands-on knowledge of ${job.skills.slice(0, 3).join(', ')}`,
-    'Strong problem-solving and teamwork skills',
-    'Good written and spoken English'
-  ];
-
+  const sal = detail && detail.salaries && detail.salaries[0];
+  const salaryText = !detail ? 'Loading…'
+    : sal && (sal.salary_text || sal.salary_min)
+      ? (sal.salary_text || `${sal.salary_min}${sal.salary_max ? '–' + sal.salary_max : ''} ${sal.currency || ''} ${sal.pay_period || ''}`.trim())
+      : 'Not available';
   const padId = (n) => ('000' + n).slice(-3);
 
   return (
@@ -1491,32 +1421,60 @@ function JobDrawer({ job, onClose }) {
         <h2 className="d-title">{job.title}</h2>
         <p className="d-co">{job.company} · {job.loc}</p>
         <div className="facts">
-          <div className="fact"><span>Salary</span><b>{job.salary}</b></div>
+          <div className="fact"><span>Salary</span><b>{salaryText}</b></div>
           <div className="fact"><span>Employment type</span><b>{job.type}</b></div>
           <div className="fact"><span>Experience</span><b>{job.exp}</b></div>
           <div className="fact"><span>Posted</span><b>{job.posted}</b></div>
         </div>
 
         <h4>About the role</h4>
-        <p className="d-p">
-          {job.company} is hiring a {job.title} {job.loc === 'Remote' ? 'to work remotely with a distributed team. ' : `for its ${job.loc} team. `}{role.a}
+        <p className="d-p" style={{ whiteSpace: 'pre-line' }}>
+          {!detail ? 'Loading description…' : detail.error ? 'Could not load the description from the API.' : (detail.description || 'No description available.')}
         </p>
-
-        <h4>Responsibilities</h4>
-        <ul>{role.r.map((resp, idx) => (<li key={idx}>{resp}</li>))}</ul>
-
-        <h4>Requirements</h4>
-        <ul>{reqs.map((req, idx) => (<li key={idx}>{req}</li>))}</ul>
 
         <h4>Skills</h4>
         <div style={{ marginTop: '8px' }}>
-          {job.skills.map((skill, idx) => (<span key={idx} className="pill">{skill}</span>))}
+          {job.skills.length ? job.skills.map((skill, idx) => (<span key={idx} className="pill">{skill}</span>)) : <span className="sub">No skills extracted for this posting.</span>}
         </div>
 
-        <h4>Benefits</h4>
-        <ul>{job.benefits.map((b, idx) => (<li key={idx}>{b}</li>))}</ul>
+        {detail && detail.source_url && (
+          <p className="d-p" style={{ marginTop: '16px' }}><a href={detail.source_url} target="_blank" rel="noreferrer">View original posting ↗</a></p>
+        )}
       </aside>
     </>
+  );
+}
+
+/* EMPLOYMENT (API) */
+function EmploymentView() {
+  const D = BASE_DATA;
+  const bars = (items) => {
+    const max = Math.max(...items.map(x => x.n_postings), 1);
+    return items.map(x => (
+      <div key={x.label} className="row">
+        <span style={{ fontWeight: 'bold' }}>{x.label}</span>
+        <div className="track"><div className="fill" style={{ width: `${(x.n_postings / max) * 100}%` }}></div></div>
+        <i>{x.n_postings} ({x.pct}%)</i>
+      </div>
+    ));
+  };
+  const ft = D.byType.find(t => t.label === 'Full-time');
+  return (
+    <div className="employment-view">
+      <h2 className="page-title">Employment Analysis</h2>
+      <div className="kpis">
+        <div className="card kpi"><b>{D.jobs}</b><span>Jobs analysed</span></div>
+        <div className="card kpi"><b>{ft ? ft.pct : 0}%</b><span>Full-time</span></div>
+        <div className="card kpi"><b>{D.remote}</b><span>Remote jobs</span></div>
+        <div className="card kpi"><b>{D.byType.length}</b><span>Employment categories</span></div>
+      </div>
+      <div className="grid">
+        <div className="card"><h3>Employment type</h3><p className="sub">As recorded by each source. “not stated” means the source left it empty.</p><div style={{ marginTop: 16 }}>{bars(D.byType)}</div></div>
+        <div className="card"><h3>Work mode</h3><p className="sub">Only remote postings are labelled by the sources; the rest stay unspecified.</p><div style={{ marginTop: 16 }}>{bars(D.byWork)}</div></div>
+        <div className="card"><h3>Experience required</h3><p className="sub">As written in the posting.</p><div style={{ marginTop: 16 }}>{bars(D.byExp)}</div></div>
+        <div className="card"><h3>Postings by source</h3><p className="sub">Where the postings come from.</p><div style={{ marginTop: 16 }}>{bars(D.bySource)}</div></div>
+      </div>
+    </div>
   );
 }
 
@@ -1560,7 +1518,7 @@ function Sidebar({ currentView, onViewChange }) {
 /* ============================================================================== */
 /* 9. ROOT APP                                                                    */
 /* ============================================================================== */
-function App() {
+function AppShell() {
   const [hasEntered, setHasEntered] = useState(false);
   const [currentView, setCurrentView] = useState('overview');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -1577,13 +1535,28 @@ function App() {
           {currentView === 'explorer' && <JobExplorer onSelectJob={(j) => setSelectedJob(j)} />}
           {currentView === 'skills' && <SkillsIntelligence onSelectJob={(j) => setSelectedJob(j)} />}
           {currentView === 'location' && <LocationAnalysis />}
-          {currentView === 'employment' && window.EmploymentView && <window.EmploymentView />}
+          {currentView === 'employment' && <EmploymentView />}
           {currentView === 'quality' && window.QualityView && <window.QualityView />}
           {currentView === 'about' && window.AboutView && <window.AboutView />}
         </section>
       </div>
 
       <JobDrawer job={selectedJob} onClose={() => setSelectedJob(null)} />
+    </div>
+  );
+}
+
+function App() {
+  const [state, setState] = useState({ status: 'loading' });
+  useEffect(() => {
+    loadAll().then(() => setState({ status: 'ready' })).catch(e => setState({ status: 'error', msg: e.message }));
+  }, []);
+  if (state.status === 'ready') return <AppShell />;
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
+      {state.status === 'loading'
+        ? <p className="sub">Loading data from the API… the server can take up to a minute to wake up.</p>
+        : <div><h2 className="page-title">Could not reach the API</h2><p className="sub">{state.msg}</p><p className="sub">API: {API_URL}</p></div>}
     </div>
   );
 }
